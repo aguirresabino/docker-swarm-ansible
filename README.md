@@ -14,38 +14,39 @@ This guide provides instructions on how to set up the development environment an
 
 ### Quick Start with Makefile
 
-The project includes a comprehensive Makefile that centralizes all development operations. For a complete setup and validation:
+The project includes a simplified Makefile that centralizes essential development operations:
 
 ```bash
-make quick-start
+# Complete setup and start development
+make setup
+make dev
 ```
 
-This command will:
+This will:
 1. Set up the complete development environment
-2. Run validation tests
-3. Display available commands
+2. Start containers and open a shell for development
 
 ### Development Environment Setup
 
-**All development operations must use the Makefile.**
+**All development operations use the Makefile.**
 
 ```bash
-# Set up and start the development environment
+# Setup and start development environment
 make setup
 
-# Start development and open shell
+# Start development (containers + shell)
 make dev
 
-# Check environment status
+# Check status
 make status
 
-# Stop the environment
+# Stop containers
 make stop
 ```
 
 ## Running Playbooks
 
-**All playbook execution must use the Makefile.**
+**All playbook execution uses the Makefile.**
 
 ```bash
 # Deploy to all hosts
@@ -61,122 +62,82 @@ make deploy-workers
 
 ## Testing
 
-### Comprehensive Testing
+### Complete Testing
+
+The `test` target automatically manages the test environment and runs all necessary tests:
 
 ```bash
-# Run all tests (lint + unit + integration)
+# Run complete test suite (automatically manages test environment)
 make test
 
-# Run basic tests (lint + syntax only) - quick validation
-make test-basic
-
-# Run individual test types
-make lint                # Linting checks
-make test-unit          # Unit tests for all roles
-make test-integration   # Integration tests
-make test-syntax        # Playbook syntax validation
+# Run linting only
+make lint
 ```
 
-### Role-Specific Testing
-
-```bash
-# Test individual roles
-make test-role-common
-make test-role-docker-manager
-make test-role-docker-worker
-```
-
-### Advanced Testing
-
-```bash
-# Full Molecule test suite (requires Docker-in-Docker)
-make test-molecule-full
-
-# Validation suite
-make validate
-
-# Environment health check
-make health
-```
+The test command:
+1. Sets up the dedicated test environment
+2. Runs ansible-lint and yamllint
+3. Validates playbook syntax
+4. Tests all roles with Molecule
+5. Cleans up test environment
 
 ## Development Workflows
 
 ### Daily Development
 
 ```bash
-# Start development session
+# Start development
 make dev
 
-# Run tests during development
+# Run tests
 make test
 
-# Check deployment before pushing
+# Check deployment
 make deploy-check
 ```
-
-### Complete Development Workflow
-
-```bash
-# Run the complete development workflow
-make dev-workflow
-```
-
-This includes: setup → test → deploy-check
 
 ### Debugging
 
 ```bash
-# Enter debugging mode
+# Debug mode with verbose output
 make debug
 
-# Check connectivity to hosts
+# Test host connectivity
 make ping
 
-# View inventory
-make inventory
-
-# Gather facts from hosts
-make facts
+# Check versions
+make version
 ```
 
 ## Maintenance
 
 ```bash
-# Clean up containers and volumes
+# Clean containers and volumes
 make clean
 
-# Complete cleanup including images
-make clean-all
-
-# Remove unused Docker resources
-make prune
-
-# Rebuild everything from scratch
-make rebuild
+# Check container status
+make status
 ```
 
 ## Available Makefile Commands
 
-Run `make help` to see all available commands organized by category:
+Run `make help` to see all available commands:
 
-- **Environment Management**: setup, start, stop, restart, status
-- **Development**: dev, shell, logs, debug
-- **Testing**: test, test-unit, test-integration, lint
+- **Environment**: setup, start, stop, status, clean
+- **Development**: dev, shell, logs  
+- **Testing**: test, lint
 - **Deployment**: deploy, deploy-check, deploy-managers, deploy-workers
-- **Debugging**: ping, inventory, facts, docker-version
-- **Maintenance**: clean, clean-all, prune, rebuild
-- **Quick Workflows**: quick-start, dev-workflow, ci-workflow
+- **Debug & Utils**: debug, ping, version
 
 ### Common Command Examples
 
 ```bash
-make help              # Show all available commands
-make quick-start       # Complete setup and validation
-make dev               # Start development environment
-make test              # Run all tests (comprehensive)
-make test-basic        # Run basic tests (quick validation)
-make deploy-check      # Test deployment (dry-run)
-make clean             # Clean up environment
+make help         # Show all available commands
+make setup        # Setup development environment
+make dev          # Start development (containers + shell)
+make test         # Run complete test suite
+make deploy-check # Test deployment (dry-run)
+make clean        # Clean up environment
 ```
 
 ## Project Structure
@@ -230,9 +191,9 @@ make clean             # Clean up environment
 
 ## Key Features
 
-- **🚀 Comprehensive Makefile**: Centralized automation with 40+ commands for all development operations
+- **🚀 Simplified Makefile**: Essential commands for core development operations
 - **🐳 Containerized Development**: Complete Docker-based environment with Docker-in-Docker support  
-- **🧪 Comprehensive Testing**: Multi-level testing with Molecule, Testinfra, and static analysis
+- **🧪 Streamlined Testing**: Automated test environment management with comprehensive validation
 - **📋 Role-based Architecture**: Modular Ansible roles for different node types
 - **🔧 Quality Assurance**: Integrated linting with ansible-lint and yamllint
-- **📚 Rich Documentation**: Detailed guides for both users and AI agents
+- **📚 Clear Documentation**: Simplified guides focused on essential workflows
