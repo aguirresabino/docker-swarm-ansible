@@ -25,4 +25,5 @@ dist/
 .vscode/
 
 # SSH Keys
-ssh_keys/
+ssh_keys/*
+!ssh_keys/.gitkeep
