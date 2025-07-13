@@ -67,6 +67,22 @@ For example, to run tests for the `common` role:
 docker compose exec ansible-control bash -c "cd roles/common && molecule test"
 ```
 
+## Running Integration Tests
+
+To run the top-level integration tests that verify the entire playbook execution, use the `run_integration_tests.sh` script:
+
+```bash
+./run_integration_tests.sh
+```
+
+This script will:
+1. Build a test Docker image (`Dockerfile.test`).
+2. Start a test container.
+3. Copy the Ansible project into the container.
+4. Run the main `playbook.yml` against the test container.
+5. Execute Testinfra tests (`tests/test_integration.py`) against the running container.
+6. Clean up the test container.
+
 ## Project Structure
 
 ```

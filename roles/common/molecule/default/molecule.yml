@@ -1,0 +1,25 @@
+--- # Molecule Test Scenario for Common Role
+
+# Define the platforms (OS/distribution) to test against
+platforms:
+  - name: instance
+    image: "geerlingguy/docker-ubuntu2204-ansible"
+
+# Define the provisioner (Ansible in this case)
+provisioner:
+  name: ansible
+  playbooks:
+    converge: converge.yml
+
+# Define the verifier (Testinfra in this case)
+verifier:
+  name: testinfra
+  directory: ./tests
+
+# Define the driver (Docker in this case)
+driver:
+  name: docker
+
+# Define the scenario (default in this case)
+scenario:
+  name: default
