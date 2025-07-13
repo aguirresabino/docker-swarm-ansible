@@ -1,0 +1,25 @@
+# Environments
+.env
+
+# Gemini
+.gemini/
+
+# Ansible temporary files
+*.retry
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+
+# Docker
+.dockerignore
+
+# IDEs
+.idea/
+.vscode/
