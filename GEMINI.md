@@ -54,7 +54,6 @@ The repository must follow this structure with comprehensive Molecule testing:
 ├── compose.yml
 ├── Dockerfile
 ├── Dockerfile.test
-├── run-playbook.sh
 └── playbook.yml
 ```
 
@@ -63,7 +62,6 @@ The repository must follow this structure with comprehensive Molecule testing:
 - **`roles/`**: Task definitions, separated by node responsibility, each with complete Molecule test suites.
 - **`tests/`**: Infrastructure validation tests and test dependencies.
 - **`Dockerfile`, `compose.yml`**: Defines the containerized development environment with Docker-in-Docker support.
-- **`run-playbook.sh`**: Internal script used by Makefile for executing playbooks.
 - **`playbook.yml`**: Main playbook that orchestrates all roles.
 
 ## 3. Development Environment
@@ -310,27 +308,9 @@ make test          # Run complete test suite
 make deploy-check  # Test deployment (dry-run)
 ```
 
-### 5.2. Execution Script (`run-playbook.sh`)
+### 5.2. Playbook Execution
 
-This script is used internally by the Makefile for executing playbooks. **Direct script execution is not supported** - all operations must use the Makefile interface.
-
-```bash
-#!/bin/bash
-set -e
-TARGET=$1
-EXTRA_ARGS=""
-[ "$2" == "--check" ] && EXTRA_ARGS="--check"
-CMD="ansible-playbook -i inventory/hosts.ini playbook.yml --vault-password-file .vault_pass $EXTRA_ARGS"
-
-case "$TARGET" in
-    all|managers|workers)
-        docker compose exec ansible-control $CMD --limit "$TARGET"
-        ;;
-    *)
-        echo "Usage: $0 {all|managers|workers} [--check]" >&2; exit 1
-        ;;
-esac
-```
+All playbook execution is handled directly by the Makefile targets. **No intermediate scripts are used** - all operations execute ansible-playbook commands directly within the containerized environment.
 
 **Usage Examples:**
 ```bash
