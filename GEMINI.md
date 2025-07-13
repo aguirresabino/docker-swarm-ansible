@@ -63,7 +63,7 @@ The repository must follow this structure with comprehensive Molecule testing:
 - **`roles/`**: Task definitions, separated by node responsibility, each with complete Molecule test suites.
 - **`tests/`**: Infrastructure validation tests and test dependencies.
 - **`Dockerfile`, `compose.yml`**: Defines the containerized development environment with Docker-in-Docker support.
-- **`run-playbook.sh`**: Script for executing the playbooks.
+- **`run-playbook.sh`**: Internal script used by Makefile for executing playbooks.
 - **`playbook.yml`**: Main playbook that orchestrates all roles.
 
 ## 3. Development Environment
@@ -171,19 +171,26 @@ volumes:
 
 ### 3.3. Environment Workflow Commands
 
+**All development operations MUST use the Makefile.**
+
 - **Initialize Environment:**
   ```bash
-  docker compose up --build -d
+  make setup
   ```
 
 - **Access Container Shell:**
   ```bash
-  docker compose exec ansible-control bash
+  make shell
+  ```
+
+- **Start Development:**
+  ```bash
+  make dev
   ```
 
 - **Shutdown Environment:**
   ```bash
-  docker compose down
+  make stop
   ```
 
 ## 4. Ansible Configuration
@@ -284,9 +291,29 @@ The main playbook orchestrates the execution of roles.
 
 ## 5. Execution and Testing
 
-### 5.1. Execution Script (`run-playbook.sh`)
+### 5.1. Makefile Commands
 
-This script is the standard interface for running playbooks.
+The project includes a comprehensive Makefile that centralizes all development operations. The Makefile provides targets for:
+
+- **Environment Management**: `setup`, `start`, `stop`, `restart`, `status`, `clean`
+- **Development**: `dev`, `shell`, `logs`, `debug`
+- **Testing**: `test`, `test-unit`, `test-integration`, `lint`, `validate`
+- **Deployment**: `deploy`, `deploy-check`, `deploy-managers`, `deploy-workers`
+- **Maintenance**: `clean`, `prune`, `rebuild`, `health`
+
+**Essential Commands:**
+```bash
+make help               # Show all available commands
+make quick-start        # Complete setup and validation
+make dev               # Start development environment
+make test              # Run all tests
+make validate          # Run validation suite
+make deploy-check      # Test deployment (dry-run)
+```
+
+### 5.2. Execution Script (`run-playbook.sh`)
+
+This script is used internally by the Makefile for executing playbooks. **Direct script execution is not supported** - all operations must use the Makefile interface.
 
 ```bash
 #!/bin/bash
@@ -308,16 +335,17 @@ esac
 
 **Usage Examples:**
 ```bash
-# Run on all hosts
-./run-playbook.sh all
-
-# Run in check mode (dry-run) on managers only
-./run-playbook.sh managers --check
+# All deployment operations MUST use Makefile
+make deploy              # Run on all hosts
+make deploy-check        # Run in check mode (dry-run) on all hosts
+make deploy-managers     # Run on managers only
+make deploy-managers-check # Run in check mode on managers only
+make deploy-workers      # Run on workers only
 ```
 
-### 5.2. Testing Strategy
+### 5.3. Testing Strategy
 
-#### 5.2.1. Multi-Level Testing Approach
+#### 5.3.1. Multi-Level Testing Approach
 
 The project implements a comprehensive multi-level testing strategy:
 
@@ -341,28 +369,33 @@ The project implements a comprehensive multi-level testing strategy:
    - Automatic verification that roles can be run multiple times
    - Ensures configuration stability and reliability
 
-#### 5.2.2. Molecule Test Execution
+#### 5.3.2. Molecule Test Execution
 
-**Individual Role Testing:**
+**All testing operations MUST use the Makefile:**
 ```bash
-# Manual execution within container:
-docker compose exec ansible-control bash -c "cd roles/<role_name> && molecule <test_command>"
+# Run all role tests
+make test-unit
 
-# Examples:
-docker compose exec ansible-control bash -c "cd roles/common && molecule test"          # Full test suite
-docker compose exec ansible-control bash -c "cd roles/docker_manager && molecule lint"  # Lint only
-docker compose exec ansible-control bash -c "cd roles/docker_worker && molecule verify" # Verify only
+# Test individual roles
+make test-role-common
+make test-role-docker-manager
+make test-role-docker-worker
+
+# Run complete test suite
+make test
+
+# Run full Molecule tests (Docker-in-Docker)
+make test-molecule-full
 ```
 
-**Available Test Commands:**
-- `test`: Run full test suite (default)
-- `converge`: Run converge only
-- `verify`: Run verify only
-- `lint`: Run lint only
-- `destroy`: Destroy test instances
-- `list`: List test instances
+**Available Test Commands through Makefile:**
+- `make test`: Run full test suite (comprehensive)
+- `make test-unit`: Run unit tests for all roles
+- `make test-integration`: Run integration tests
+- `make lint`: Run static analysis
+- `make test-syntax`: Run syntax validation
 
-#### 5.2.4. Docker-in-Docker Testing Requirements
+#### 5.3.3. Docker-in-Docker Testing Requirements
 
 All testing relies on Docker-in-Docker capabilities:
 
@@ -443,36 +476,31 @@ A task is declared **COMPLETE** if, and only if, all the following conditions re
 1.  **Checklist Complete**: The checklist in the plan is 100% filled with `[x]`.
 2.  **Static Analysis Passed**: All code must pass `ansible-lint` and `yamllint` without errors.
 3.  **Molecule Tests Passed**: All roles with Molecule configurations must pass `molecule test` successfully.
-4.  **Playbook Validation**: The `./run-playbook.sh` script must execute in `--check` mode without errors.
+4.  **Playbook Validation**: The playbooks must execute in check mode without errors using `make deploy-check`.
 5.  **Docker-in-Docker Functionality**: Verify that Molecule can create, manage, and destroy Docker containers.
 6.  **Test Coverage**: Each role must have comprehensive Testinfra tests covering all functionality.
 7.  **Plan as Proof**: The finalized plan file serves as the execution log and the auditable proof that all steps were followed.
 
 #### Mandatory Testing Protocol for AI Agents
 
-Before declaring any development task complete, AI agents MUST execute the following testing sequence:
+Before declaring any development task complete, AI agents MUST execute the following testing sequence using the Makefile:
 
+**Required Makefile Commands:**
 ```bash
-# 1. Static Analysis
-ansible-lint playbook.yml
-yamllint .
+# Complete validation suite
+make validate
 
-# 2. Individual Role Syntax and Lint Testing
-docker compose exec ansible-control bash -c "cd roles/common && molecule lint"
-docker compose exec ansible-control bash -c "cd roles/common && molecule syntax"
-docker compose exec ansible-control bash -c "cd roles/docker_manager && molecule lint"
-docker compose exec ansible-control bash -c "cd roles/docker_manager && molecule syntax"  
-docker compose exec ansible-control bash -c "cd roles/docker_worker && molecule lint"
-docker compose exec ansible-control bash -c "cd roles/docker_worker && molecule syntax"
-
-# 3. Playbook Validation
-ansible-playbook -i inventory/hosts.ini playbook.yml --check --limit all
+# Or individual steps:
+make lint                    # Static Analysis
+make test-unit              # Individual Role Testing
+make test-syntax            # Playbook Validation
+make deploy-check           # Playbook Validation
 ```
 
 **Testing Environment Requirements:**
 - All tests MUST run within the containerized environment
 - Basic functionality tests MUST pass for task completion
-- Docker-in-Docker Molecule tests are optional but recommended when environment supports it
+- Docker-in-Docker Molecule tests are enhanced functionality when environment supports it
 - All test artifacts MUST be cleaned up automatically
 
 **Test Failure Protocol:**
