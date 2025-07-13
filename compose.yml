@@ -1,0 +1,8 @@
+services:
+  ansible-control:
+    build: .
+    container_name: ansible_control_node
+    volumes:
+      - .:/ansible
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: tail -f /dev/null # Keep the container running
