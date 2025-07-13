@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-RUN pip install ansible docker "molecule[docker]" testinfra ansible-lint && pip install molecule-delegated
+RUN pip install ansible docker "molecule[docker]" testinfra ansible-lint
 
 # Configure the working directory
 WORKDIR /ansible
