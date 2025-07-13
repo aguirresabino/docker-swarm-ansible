@@ -23,3 +23,6 @@ dist/
 # IDEs
 .idea/
 .vscode/
+
+# SSH Keys
+ssh_keys/
