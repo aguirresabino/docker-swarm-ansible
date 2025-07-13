@@ -185,7 +185,6 @@ make clean        # Clean up environment
 ├── Makefile                      # Central automation commands
 ├── compose.yml                   # Docker Compose configuration
 ├── Dockerfile                    # Multi-stage container build
-├── run-playbook.sh              # Internal script used by Makefile
 └── playbook.yml                 # Main orchestration playbook
 ```
 

@@ -96,20 +96,22 @@ lint: ## 🔍 Run linting checks
 .PHONY: deploy
 deploy: ## 🚀 Deploy to all hosts
 	@echo "$(GREEN)Deploying to all hosts...$(NC)"
-	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "./run-playbook.sh all"
+	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) ansible-playbook -i inventory/hosts.ini playbook.yml --limit all
 
 .PHONY: deploy-check
 deploy-check: ## ✅ Deploy check (dry-run)
 	@echo "$(GREEN)Running deployment check...$(NC)"
-	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "./run-playbook.sh all --check"
+	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) ansible-playbook -i inventory/hosts.ini playbook.yml --limit all --check
 
 .PHONY: deploy-managers
 deploy-managers: ## 🚀 Deploy to managers only
-	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "./run-playbook.sh managers"
+	@echo "$(GREEN)Deploying to manager nodes...$(NC)"
+	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) ansible-playbook -i inventory/hosts.ini playbook.yml --limit managers
 
 .PHONY: deploy-workers
 deploy-workers: ## 🚀 Deploy to workers only
-	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "./run-playbook.sh workers"
+	@echo "$(GREEN)Deploying to worker nodes...$(NC)"
+	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) ansible-playbook -i inventory/hosts.ini playbook.yml --limit workers
 
 # Debugging and Utilities
 # ======================
