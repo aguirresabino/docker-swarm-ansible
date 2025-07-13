@@ -35,4 +35,6 @@
     username: "{{ docker_registry_username | default(omit) }}"
     password: "{{ docker_registry_password | default(omit) }}"
     registry_url: "{{ docker_registry_url | default('docker.io') }}"
-  when: docker_registry_username is defined and docker_registry_password is defined
+  when: >-
+    docker_registry_username is defined and
+    docker_registry_password is defined
