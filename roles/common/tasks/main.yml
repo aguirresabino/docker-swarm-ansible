@@ -1,0 +1,38 @@
+---
+- name: Install Docker
+  ansible.builtin.apt:
+    name: docker-ce
+    state: present
+  notify: Restart docker
+
+- name: Add current user to docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Configure NTP with systemd-timesyncd
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/timesyncd.conf
+    regexp: '^#?NTP='
+    line: 'NTP={{ common_ntp_server }}'
+  notify: Restart systemd-timesyncd
+
+- name: Ensure systemd-timesyncd service is started and enabled
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: started
+    enabled: true
+
+- name: Log in to Docker registry
+  community.docker.docker_login:
+    username: "{{ docker_registry_username | default(omit) }}"
+    password: "{{ docker_registry_password | default(omit) }}"
+    registry_url: "{{ docker_registry_url | default('docker.io') }}"
+  when: docker_registry_username is defined and docker_registry_password is defined

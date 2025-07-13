@@ -4,5 +4,8 @@ services:
     container_name: ansible_control_node
     volumes:
       - .:/ansible
+      # Mount SSH keys for host access
+      - ~/.ssh:/root/.ssh:ro
+      # Mount the Docker socket for Molecule
       - /var/run/docker.sock:/var/run/docker.sock
     command: tail -f /dev/null # Keep the container running

@@ -1,0 +1,37 @@
+---
+- name: Test common role
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Print Docker version
+      ansible.builtin.debug:
+        var: docker_version.stdout
+
+    - name: Check if systemd-timesyncd is active
+      ansible.builtin.command: systemctl is-active systemd-timesyncd
+      register: timesyncd_active
+      changed_when: false
+
+    - name: Print systemd-timesyncd status
+      ansible.builtin.debug:
+        var: timesyncd_active.stdout
+
+    - name: Check if time is synchronized
+      ansible.builtin.command: timedatectl status | grep "System clock synchronized: yes"
+      register: time_sync_status
+      changed_when: false
+
+    - name: Print time synchronization status
+      ansible.builtin.debug:
+        var: time_sync_status.stdout
+
+    - name: Check if logged into Docker registry (if credentials provided)
+      ansible.builtin.command: docker info | grep "Username: {{ docker_registry_username | default('' ) }}"
+      register: docker_login_status
+      changed_when: false
+      when: docker_registry_username is defined
