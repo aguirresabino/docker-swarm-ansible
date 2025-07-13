@@ -1,41 +1,5 @@
 # Development and Contribution Guide: Ansible for Docker Swarm
 
-## ✅ Funcionalidades de Teste Implementadas
-
-### Sistema de Testes Integrado
-- **Análise Estática**: ansible-lint 25.6.1 + yamllint para qualidade de código
-- **Validação de Playbook**: Execução em modo check para validar sintaxe
-- **Testes de Role**: Molecule com verificação de sintaxe e lint personalizado
-- **Validação de Tarefas**: Verificação individual de cada role
-- **Python 3.11**: Ambiente atualizado para suporte às versões mais recentes
-
-### Funcionalidade de Lint Personalizada
-**Implementação customizada para Molecule 6.x** (que removeu o comando `molecule lint`):
-- Combina ansible-lint e yamllint
-- Executado através do script `run_molecule_tests.sh`
-- Disponível para todas as roles: common, docker_manager, docker_worker
-
-```bash
-# Executar lint para roles específicas
-./run_molecule_tests.sh common lint
-./run_molecule_tests.sh docker_manager lint  
-./run_molecule_tests.sh docker_worker lint
-
-# Ou usar o script completo que inclui lint
-./run_simple_tests.sh
-```
-
-### Correções Implementadas
-- ✅ Criadas tarefas para roles docker_manager e docker_worker
-- ✅ Corrigidas convenções de nomenclatura de variáveis (prefixos obrigatórios)
-- ✅ Implementada funcionalidade de lint customizada para Molecule 6.x
-- ✅ Atualizada documentação com notas sobre limitações do Docker-in-Docker
-- ✅ Atualizado ambiente para Python 3.11 e ansible-lint 25.6.1
-- ✅ Corrigidos arquivos converge.yml do Molecule para compatibilidade com novas versões
-- ✅ Atualizado pip para versão 25.1.1 para melhor compatibilidade
-
----
-
 ## 1. Project Overview
 
 This document specifies the standards for automating a Docker Swarm cluster configuration using Ansible and defines the development protocol to be followed. The project must adhere to the principles of modularity, testability, security, and a structured development workflow.
@@ -91,8 +55,6 @@ The repository must follow this structure with comprehensive Molecule testing:
 ├── Dockerfile
 ├── Dockerfile.test
 ├── run-playbook.sh
-├── run_integration_tests.sh
-├── run_molecule_tests.sh
 └── playbook.yml
 ```
 
@@ -102,8 +64,6 @@ The repository must follow this structure with comprehensive Molecule testing:
 - **`tests/`**: Infrastructure validation tests and test dependencies.
 - **`Dockerfile`, `compose.yml`**: Defines the containerized development environment with Docker-in-Docker support.
 - **`run-playbook.sh`**: Script for executing the playbooks.
-- **`run_integration_tests.sh`**: Comprehensive integration test runner.
-- **`run_molecule_tests.sh`**: Individual role test runner.
 - **`playbook.yml`**: Main playbook that orchestrates all roles.
 
 ## 3. Development Environment
@@ -385,16 +345,13 @@ The project implements a comprehensive multi-level testing strategy:
 
 **Individual Role Testing:**
 ```bash
-# Using the helper script (recommended)
-./run_molecule_tests.sh <role_name> [test_command]
+# Manual execution within container:
+docker compose exec ansible-control bash -c "cd roles/<role_name> && molecule <test_command>"
 
 # Examples:
-./run_molecule_tests.sh common test          # Full test suite
-./run_molecule_tests.sh docker_manager lint  # Lint only
-./run_molecule_tests.sh docker_worker verify # Verify only
-
-# Manual execution within container:
-docker compose exec ansible-control bash -c "cd roles/common && molecule test"
+docker compose exec ansible-control bash -c "cd roles/common && molecule test"          # Full test suite
+docker compose exec ansible-control bash -c "cd roles/docker_manager && molecule lint"  # Lint only
+docker compose exec ansible-control bash -c "cd roles/docker_worker && molecule verify" # Verify only
 ```
 
 **Available Test Commands:**
@@ -404,21 +361,6 @@ docker compose exec ansible-control bash -c "cd roles/common && molecule test"
 - `lint`: Run lint only
 - `destroy`: Destroy test instances
 - `list`: List test instances
-
-#### 5.2.3. Integration Test Execution
-
-**Comprehensive Integration Testing:**
-```bash
-./run_integration_tests.sh
-```
-
-This script executes:
-1. Static analysis with `ansible-lint`
-2. Dry-run validation with `--check` mode
-3. Full playbook deployment
-4. Infrastructure validation with Testinfra
-5. Individual role Molecule tests
-6. Cleanup and reporting
 
 #### 5.2.4. Docker-in-Docker Testing Requirements
 
@@ -501,11 +443,10 @@ A task is declared **COMPLETE** if, and only if, all the following conditions re
 1.  **Checklist Complete**: The checklist in the plan is 100% filled with `[x]`.
 2.  **Static Analysis Passed**: All code must pass `ansible-lint` and `yamllint` without errors.
 3.  **Molecule Tests Passed**: All roles with Molecule configurations must pass `molecule test` successfully.
-4.  **Integration Tests Passed**: The `./run_integration_tests.sh` script must execute without errors.
-5.  **Playbook Validation**: The `./run-playbook.sh` script must execute in `--check` mode without errors.
-6.  **Docker-in-Docker Functionality**: Verify that Molecule can create, manage, and destroy Docker containers.
-7.  **Test Coverage**: Each role must have comprehensive Testinfra tests covering all functionality.
-8.  **Plan as Proof**: The finalized plan file serves as the execution log and the auditable proof that all steps were followed.
+4.  **Playbook Validation**: The `./run-playbook.sh` script must execute in `--check` mode without errors.
+5.  **Docker-in-Docker Functionality**: Verify that Molecule can create, manage, and destroy Docker containers.
+6.  **Test Coverage**: Each role must have comprehensive Testinfra tests covering all functionality.
+7.  **Plan as Proof**: The finalized plan file serves as the execution log and the auditable proof that all steps were followed.
 
 #### Mandatory Testing Protocol for AI Agents
 
@@ -516,18 +457,15 @@ Before declaring any development task complete, AI agents MUST execute the follo
 ansible-lint playbook.yml
 yamllint .
 
-# 2. Quick Development Testing (Recommended)
-./run_simple_tests.sh
+# 2. Individual Role Syntax and Lint Testing
+docker compose exec ansible-control bash -c "cd roles/common && molecule lint"
+docker compose exec ansible-control bash -c "cd roles/common && molecule syntax"
+docker compose exec ansible-control bash -c "cd roles/docker_manager && molecule lint"
+docker compose exec ansible-control bash -c "cd roles/docker_manager && molecule syntax"  
+docker compose exec ansible-control bash -c "cd roles/docker_worker && molecule lint"
+docker compose exec ansible-control bash -c "cd roles/docker_worker && molecule syntax"
 
-# 3. Individual Role Syntax and Lint Testing
-./run_molecule_tests.sh common lint
-./run_molecule_tests.sh common syntax
-./run_molecule_tests.sh docker_manager lint
-./run_molecule_tests.sh docker_manager syntax  
-./run_molecule_tests.sh docker_worker lint
-./run_molecule_tests.sh docker_worker syntax
-
-# 4. Playbook Validation
+# 3. Playbook Validation
 ansible-playbook -i inventory/hosts.ini playbook.yml --check --limit all
 ```
 
