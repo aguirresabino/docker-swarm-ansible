@@ -1,0 +1,21 @@
+---
+# roles/docker_worker/tasks/main.yml
+# Docker Swarm Worker Configuration
+
+- name: Check if node is already part of swarm
+  ansible.builtin.command: >
+    docker info --format "{{ '{{' }}.Swarm.LocalNodeState{{ '}}' }}"
+  register: node_swarm_state
+  changed_when: false
+  failed_when: false
+
+- name: Join Docker Swarm as worker
+  ansible.builtin.command: >
+    docker swarm join --token {{ docker_swarm_worker_token }}
+    {{ docker_swarm_manager_ip }}:2377
+  when:
+    - docker_swarm_worker_token is defined
+    - docker_swarm_manager_ip is defined
+    - node_swarm_state.stdout != "active"
+  register: join_result
+  changed_when: join_result.rc == 0

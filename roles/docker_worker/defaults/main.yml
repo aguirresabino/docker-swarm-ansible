@@ -1,0 +1,10 @@
+---
+# roles/docker_worker/defaults/main.yml
+# Default variables for docker_worker role
+
+# These variables should be set in group_vars or inventory
+# docker_worker_swarm_worker_token: ""
+# docker_worker_swarm_manager_ip: ""
+
+# Default manager port
+docker_worker_swarm_manager_port: 2377

@@ -1,0 +1,26 @@
+---
+- name: Converge - Setup Manager
+  hosts: managers
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Include common role first
+      include_role:
+        name: common
+    - name: Include docker_manager role
+      include_role:
+        name: docker_manager
+        tasks_from: main
+
+- name: Converge - Setup Worker
+  hosts: workers
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Include common role first
+      include_role:
+        name: common
+    - name: Include docker_worker role
+      include_role:
+        name: docker_worker
+        tasks_from: main

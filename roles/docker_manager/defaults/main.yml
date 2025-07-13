@@ -1,0 +1,10 @@
+---
+# roles/docker_manager/defaults/main.yml
+# Default variables for docker_manager role
+
+# Docker Swarm configuration
+docker_manager_swarm_advertise_addr: "{{ ansible_default_ipv4.address }}"
+docker_manager_swarm_listen_addr: "0.0.0.0:2377"
+
+# Optional manager join token (for additional managers)
+# docker_manager_swarm_manager_token: ""
