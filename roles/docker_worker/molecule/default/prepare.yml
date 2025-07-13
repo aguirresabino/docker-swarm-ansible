@@ -1,0 +1,30 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install basic packages for testing
+      apt:
+        name:
+          - curl
+          - gnupg
+          - lsb-release
+          - ca-certificates
+          - python3
+          - python3-pip
+          - systemd
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure systemd is running
+      service:
+        name: systemd-timesyncd
+        state: started
+      ignore_errors: true
