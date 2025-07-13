@@ -1,27 +1,57 @@
---- # Molecule Test Scenario for Common Role
+---
+dependency:
+  name: galaxy
 
-# Define the platforms (OS/distribution) to test against
+driver:
+  name: docker
+
 platforms:
   - name: instance
-    # The tests will run directly on the ansible-control container
+    image: ubuntu:22.04
+    pre_build_image: true
+    privileged: true
+    command: sleep infinity
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    capabilities:
+      - SYS_ADMIN
+    tmpfs:
+      - /run
+      - /tmp
 
-# Define the provisioner (Ansible in this case)
 provisioner:
   name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      callback_whitelist: profile_tasks, timer, yaml
+    ssh_connection:
+      pipelining: false
   playbooks:
     converge: converge.yml
+  inventory:
+    host_vars:
+      instance:
+        ansible_user: root
 
-# Define the verifier (Testinfra in this case)
 verifier:
   name: testinfra
   directory: ./tests
-
-# Define the driver (Delegated in this case)
-driver:
-  name: delegated
   options:
-    managed: false
+    v: 1
 
-# Define the scenario (default in this case)
 scenario:
   name: default
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - side_effect
+    - verify
+    - cleanup
+    - destroy
