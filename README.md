@@ -58,7 +58,6 @@ The `run-playbook.sh` script is the recommended way to execute the playbooks.
 ```
 .
 ├── docs/
-│   └── plans/
 ├── inventory/
 │   ├── group_vars/
 │   │   └── all.yml
