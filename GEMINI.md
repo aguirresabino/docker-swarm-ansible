@@ -293,22 +293,21 @@ The main playbook orchestrates the execution of roles.
 
 ### 5.1. Makefile Commands
 
-The project includes a comprehensive Makefile that centralizes all development operations. The Makefile provides targets for:
+The project includes a simplified Makefile that centralizes essential development operations:
 
-- **Environment Management**: `setup`, `start`, `stop`, `restart`, `status`, `clean`
-- **Development**: `dev`, `shell`, `logs`, `debug`
-- **Testing**: `test`, `test-unit`, `test-integration`, `lint`, `validate`
+- **Environment Management**: `setup`, `start`, `stop`, `status`, `clean`
+- **Development**: `dev`, `shell`, `logs`
+- **Testing**: `test`, `lint`
 - **Deployment**: `deploy`, `deploy-check`, `deploy-managers`, `deploy-workers`
-- **Maintenance**: `clean`, `prune`, `rebuild`, `health`
+- **Debug & Utilities**: `debug`, `ping`, `version`
 
 **Essential Commands:**
 ```bash
-make help               # Show all available commands
-make quick-start        # Complete setup and validation
-make dev               # Start development environment
-make test              # Run all tests
-make validate          # Run validation suite
-make deploy-check      # Test deployment (dry-run)
+make help          # Show all available commands
+make setup         # Setup development environment
+make dev           # Start development (containers + shell)
+make test          # Run complete test suite
+make deploy-check  # Test deployment (dry-run)
 ```
 
 ### 5.2. Execution Script (`run-playbook.sh`)
@@ -339,7 +338,6 @@ esac
 make deploy              # Run on all hosts
 make deploy-check        # Run in check mode (dry-run) on all hosts
 make deploy-managers     # Run on managers only
-make deploy-managers-check # Run in check mode on managers only
 make deploy-workers      # Run on workers only
 ```
 
@@ -369,31 +367,26 @@ The project implements a comprehensive multi-level testing strategy:
    - Automatic verification that roles can be run multiple times
    - Ensures configuration stability and reliability
 
-#### 5.3.2. Molecule Test Execution
+#### 5.3.2. Test Execution
 
 **All testing operations MUST use the Makefile:**
 ```bash
-# Run all role tests
-make test-unit
-
-# Test individual roles
-make test-role-common
-make test-role-docker-manager
-make test-role-docker-worker
-
-# Run complete test suite
+# Run complete test suite (automatically manages test environment)
 make test
 
-# Run full Molecule tests (Docker-in-Docker)
-make test-molecule-full
+# Run linting only
+make lint
+
+# Deploy validation
+make deploy-check
 ```
 
-**Available Test Commands through Makefile:**
-- `make test`: Run full test suite (comprehensive)
-- `make test-unit`: Run unit tests for all roles
-- `make test-integration`: Run integration tests
-- `make lint`: Run static analysis
-- `make test-syntax`: Run syntax validation
+**The `make test` command automatically:**
+- Sets up dedicated test environment
+- Runs ansible-lint and yamllint
+- Validates playbook syntax  
+- Tests all roles with Molecule
+- Cleans up test environment
 
 #### 5.3.3. Docker-in-Docker Testing Requirements
 
@@ -487,21 +480,16 @@ Before declaring any development task complete, AI agents MUST execute the follo
 
 **Required Makefile Commands:**
 ```bash
-# Complete validation suite
-make validate
-
-# Or individual steps:
-make lint                    # Static Analysis
-make test-unit              # Individual Role Testing
-make test-syntax            # Playbook Validation
-make deploy-check           # Playbook Validation
+# Essential validation commands
+make test            # Complete test suite (includes lint + syntax + roles)
+make deploy-check    # Deployment validation
 ```
 
 **Testing Environment Requirements:**
-- All tests MUST run within the containerized environment
+- The `make test` command automatically manages test environment setup and cleanup
+- All tests run within containerized environment for consistency
 - Basic functionality tests MUST pass for task completion
 - Docker-in-Docker Molecule tests are enhanced functionality when environment supports it
-- All test artifacts MUST be cleaned up automatically
 
 **Test Failure Protocol:**
 - Any basic test failure MUST be resolved before task completion
