@@ -254,8 +254,8 @@ graph TD
 
 1.  **Create Plan File**:
     - **Command**: Create a new Markdown file in `/docs/plans/`.
-    - **Naming**: `[task-id].md`.
-    - **Example**: `/docs/plans/FEAT-101.md`.
+    - **Naming**: The name of each plan file must be only a number that must follow the sequence.
+    - **Example**: `1.md`. If the file `1.md` already exists in `docs/plans`, then a new task must have the name `2.md`.
 
 2.  **Structure the Plan**: The file must contain the sections: `1. Objective`, `2. Technical Analysis and Strategy`, `3. Scope of Modification`, and `4. Execution Plan (Checklist)`.
 
