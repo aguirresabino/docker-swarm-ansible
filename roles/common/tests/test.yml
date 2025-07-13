@@ -4,34 +4,77 @@
   become: yes
   tasks:
     - name: Check if Docker is installed
-      ansible.builtin.command: docker --version
-      register: docker_version
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Assert Docker package is installed
+      ansible.builtin.assert:
+        that:
+          - "'docker-ce' in ansible_facts.packages"
+        msg: "Docker CE package is not installed."
+
+    - name: Assert Docker service is running and enabled
+      ansible.builtin.systemd_service_facts:
+
+    - name: Assert Docker service status
+      ansible.builtin.assert:
+        that:
+          - "ansible_facts.services['docker.service'].state == 'running'"
+          - "ansible_facts.services['docker.service'].status == 'enabled'"
+        msg: "Docker service is not running or not enabled."
+
+    - name: Assert user is in docker group
+      ansible.builtin.command: id -nG {{ ansible_user }}
+      register: user_groups
       changed_when: false
 
-    - name: Print Docker version
-      ansible.builtin.debug:
-        var: docker_version.stdout
+    - name: Assert user is in docker group
+      ansible.builtin.assert:
+        that:
+          - "'docker' in user_groups.stdout"
+        msg: "User {{ ansible_user }} is not in the docker group."
 
-    - name: Check if systemd-timesyncd is active
-      ansible.builtin.command: systemctl is-active systemd-timesyncd
-      register: timesyncd_active
+    - name: Assert systemd-timesyncd service is running and enabled
+      ansible.builtin.systemd_service_facts:
+
+    - name: Assert systemd-timesyncd service status
+      ansible.builtin.assert:
+        that:
+          - "ansible_facts.services['systemd-timesyncd.service'].state == 'running'"
+          - "ansible_facts.services['systemd-timesyncd.service'].status == 'enabled'"
+        msg: "systemd-timesyncd service is not running or not enabled."
+
+    - name: Assert NTP server is configured in timesyncd.conf
+      ansible.builtin.command: grep "^NTP={{ common_ntp_server }}" /etc/systemd/timesyncd.conf
+      register: ntp_config
       changed_when: false
 
-    - name: Print systemd-timesyncd status
-      ansible.builtin.debug:
-        var: timesyncd_active.stdout
+    - name: Assert NTP server configuration
+      ansible.builtin.assert:
+        that:
+          - ntp_config.rc == 0
+        msg: "NTP server {{ common_ntp_server }} is not configured in /etc/systemd/timesyncd.conf."
 
-    - name: Check if time is synchronized
+    - name: Assert system clock is synchronized
       ansible.builtin.command: timedatectl status | grep "System clock synchronized: yes"
       register: time_sync_status
       changed_when: false
 
-    - name: Print time synchronization status
-      ansible.builtin.debug:
-        var: time_sync_status.stdout
+    - name: Assert time synchronization status
+      ansible.builtin.assert:
+        that:
+          - time_sync_status.rc == 0
+        msg: "System clock is not synchronized."
 
-    - name: Check if logged into Docker registry (if credentials provided)
+    - name: Assert Docker registry login (if credentials provided)
       ansible.builtin.command: docker info | grep "Username: {{ docker_registry_username | default('' ) }}"
       register: docker_login_status
       changed_when: false
+      when: docker_registry_username is defined
+
+    - name: Assert Docker registry login status
+      ansible.builtin.assert:
+        that:
+          - docker_login_status.rc == 0
+        msg: "Failed to log in to Docker registry with provided credentials."
       when: docker_registry_username is defined
