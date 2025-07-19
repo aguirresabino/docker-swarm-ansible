@@ -333,6 +333,27 @@ chmod 600 ssh_keys/*
 
 **REQUIRED:** All roles must include comprehensive Molecule tests.
 
+#### 6.2.1 Test Initialization
+
+When creating new Molecule tests for a role, always use the `molecule init role` command. This command sets up the basic directory structure and configuration files, ensuring consistency across all test suites. Remember that the development environment supports Docker-in-Docker, so the `docker` driver should always be specified.
+
+**Example:**
+```bash
+molecule init role <role_name> --driver-name docker --verifier-name testinfra
+```
+
+Replace `<role_name>` with the actual name of the Ansible role you are testing. This command will create the necessary `molecule/default` directory within your role, pre-configured for Docker-in-Docker testing with Testinfra.
+
+#### 6.2.2 Molecule Configuration Standards
+
+All Molecule configurations MUST:
+- Use the Docker driver for containerized testing
+- Use Ubuntu 22.04 as the base test image
+- Enable privileged mode for systemd and Docker operations
+- Include proper cgroupns_mode and volume mounts for systemd
+- Configure Testinfra as the verifier with parallel execution
+- Include comprehensive test sequences (lint, syntax, converge, idempotence, verify)
+
 ```yaml
 # ✅ Good Molecule Test Structure
 # molecule/default/molecule.yml
@@ -355,7 +376,7 @@ verifier:
   name: testinfra
 ```
 
-### 6.3 Testinfra Validation
+#### 6.2.3 Testinfra Validation
 
 ```python
 # ✅ Good Testinfra Test Pattern
