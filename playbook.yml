@@ -4,15 +4,3 @@
   become: true
   roles:
     - common
-
-- name: Configure Docker Swarm Managers
-  hosts: managers
-  become: true
-  roles:
-    - docker_manager
-
-- name: Configure Docker Swarm Workers
-  hosts: workers
-  become: true
-  roles:
-    - docker_worker
