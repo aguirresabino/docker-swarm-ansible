@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     gnupg \
     lsb-release \
+    rsync \
     && rm -rf /var/lib/apt/lists/*
 
 # Add Docker's official GPG key and set up the repository
