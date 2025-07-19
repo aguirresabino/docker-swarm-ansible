@@ -14,14 +14,15 @@ platforms:
     pre_build_image: false
 provisioner:
   name: ansible
+  ansible_args:
+    - --skip-tags
+    - molecule-notest
   inventory:
     host_vars:
       instance:
         ansible_user: root
         ansible_connection: docker
         ansible_python_interpreter: /usr/bin/python3
-        # Variable to skip handlers that don't work in containers
-        molecule_test_environment: true
   env:
     ANSIBLE_ROLES_PATH: ../../..
 verifier:

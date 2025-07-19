@@ -28,16 +28,13 @@
   ansible.builtin.apt:
     name: docker-ce
     state: present
-  notify: Restart docker
-  when: not (molecule_test_environment | default(false))
   tags: [docker]
 
-- name: Install Docker (test environment)
-  ansible.builtin.apt:
-    name: docker-ce
-    state: present
-  when: molecule_test_environment | default(false)
-  tags: [docker]
+- name: Restart Docker after installation (production only)
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  tags: [docker, molecule-notest]
 
 - name: Add current user to docker group
   ansible.builtin.user:
@@ -57,15 +54,13 @@
     path: /etc/systemd/timesyncd.conf
     regexp: '^#?NTP='
     line: 'NTP={{ common_ntp_server }}'
-  notify: Restart systemd-timesyncd
-  when: not (molecule_test_environment | default(false))
+  tags: [timesyncd]
 
-- name: Configure NTP with systemd-timesyncd (test environment)
-  ansible.builtin.lineinfile:
-    path: /etc/systemd/timesyncd.conf
-    regexp: '^#?NTP='
-    line: 'NTP={{ common_ntp_server }}'
-  when: molecule_test_environment | default(false)
+- name: Restart systemd-timesyncd after configuration (production only)
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: restarted
+  tags: [timesyncd, molecule-notest]
 
 - name: Ensure systemd-timesyncd service is started and enabled
   ansible.builtin.systemd:
