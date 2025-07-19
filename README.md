@@ -23,16 +23,7 @@ This project automates the configuration of a Docker Swarm cluster using Ansible
 │   │   ├── handlers/
 │   │   ├── molecule/             # Automated tests
 │   │   └── tasks/
-│   ├── docker_manager/           # Swarm manager configuration
-│   │   ├── defaults/
-│   │   ├── molecule/
-│   │   └── tasks/
-│   └── docker_worker/            # Swarm worker configuration
-│       ├── defaults/
-│       ├── molecule/
-│       └── tasks/
 ├── ssh_keys/                     # SSH keys for authentication
-├── tests/                        # Project tests
 ├── Makefile                      # Automation commands
 ├── compose.yml                   # Docker Compose for development
 ├── Dockerfile                    # Development container
