@@ -234,7 +234,6 @@ artifacts
 │   │   │           └── test_common.py
 │   │   └── tasks/
 ├── ssh_keys/                    # SSH keys for authentication
-├── tests/                       # Integration tests
 ├── Makefile                     # Central automation commands
 ├── compose.yml                  # Docker Compose configuration
 ├── Dockerfile                   # Development container
