@@ -20,7 +20,6 @@ This project automates the configuration of a Docker Swarm cluster using Ansible
 ├── roles/
 │   ├── common/                   # Base configuration for all nodes
 │   │   ├── defaults/
-│   │   ├── handlers/
 │   │   ├── molecule/             # Automated tests
 │   │   └── tasks/
 ├── ssh_keys/                     # SSH keys for authentication
