@@ -226,12 +226,6 @@ artifacts
 │   │   ├── defaults/
 │   │   ├── handlers/
 │   │   ├── molecule/
-│   │   │   └── default/
-│   │   │       ├── molecule.yml
-│   │   │       ├── converge.yml
-│   │   │       ├── prepare.yml
-│   │   │       └── tests/
-│   │   │           └── test_common.py
 │   │   └── tasks/
 ├── ssh_keys/                    # SSH keys for authentication
 ├── Makefile                     # Central automation commands
