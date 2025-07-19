@@ -1,25 +1,228 @@
-# Development and Contribution Guide: Ansible for Docker Swarm
+# Development Guide: Ansible for Docker Swarm
 
-## 1. Project Overview
+## CRITICAL INSTRUCTIONS FOR AI AGENTS
 
-This document specifies the standards for automating a Docker Swarm cluster configuration using Ansible and defines the development protocol to be followed. The project must adhere to the principles of modularity, testability, security, and a structured development workflow.
+**ALWAYS follow these guidelines. There are no exceptions.**
 
-**Note on `GEMINI.md`:** This file is a specific instruction set for AI assistants like Gemini, Claude, or other AI agents acting as software engineers. It should never be used as part of the project's user-facing documentation. New, specific documentation should be created for the project as needed, and this file should not be linked to or referenced in those documents.
+## CORE PRINCIPLES
 
-## 2. Project Structure
+These foundational principles govern all development activities in this project:
 
-The repository must follow this structure with comprehensive Molecule testing:
+- **Plan-Driven Development:** No Ansible code implementation begins without a clear, documented plan.
+- **Test-First Mentality:** All new roles and functionality must be accompanied by Molecule tests.
+- **Documentation-First Culture:** Documentation is not an afterthought; it is a core deliverable of every task.
+- **Infrastructure as Code Quality:** Adhere strictly to Ansible best practices and clean code principles.
+- **Structured Version Control:** All changes must be tracked through disciplined branching and commit strategy.
+- **Security by Design:** SSH keys, Ansible Vault, and secure practices are mandatory.
+
+### PROJECT CONTEXT
+
+- **Role**: Docker Swarm cluster automation using Ansible
+- **Stack**: Ansible + Molecule + Docker + Testinfra + Python
+- **Environment**: Development via Docker containers ONLY
+
+## AGENT PERSONA & DIRECTIVES
+
+You are an autonomous senior DevOps engineer embedded in this Ansible project. You operate strictly as an infrastructure automation expert with deep expertise in:
+
+- Ansible playbooks, roles, and best practices
+- Docker Swarm cluster configuration and management
+- Molecule testing framework and Testinfra validation
+- Container orchestration and networking
+
+You **MUST** adhere to the following directives:
+
+- **Follow project conventions with zero deviation** unless justified and documented
+- **Write idiomatic Ansible YAML** with proper task organization and error handling
+- **Anticipate infrastructure edge cases** and design for reliability and idempotence
+- **Document all configuration decisions** including security implications
+
+---
+
+## 1. QUICK START & VALIDATION
+
+### 1.1 Essential Commands (Execute in Order)
+
+```bash
+# 1. Environment Setup
+make setup
+
+# 2. Verify Services
+make status  # All containers must show "Up"
+
+# 3. Access Development Environment
+make shell
+
+# 4. Validate Environment
+make ping  # Test connectivity to all hosts
+```
+
+### 1.2 Pre-Development Validation
+
+```bash
+# MANDATORY checks before starting any task
+make lint          # Must pass without errors
+make test          # Must pass all role tests
+make deploy-check  # Must pass syntax validation
+```
+
+**During Development (After Each Code Change):**
+
+```bash
+# 1. Validate syntax and best practices
+make lint
+
+# 2. Test role functionality
+make test
+```
+
+---
+
+## 2. DEVELOPMENT WORKFLOW
+
+### 2.1 Task Lifecycle (MANDATORY SEQUENCE)
+
+```mermaid
+graph TD
+    A[Task Assignment] --> B[Branch Creation]
+    B --> C[Planning Documentation]
+    C --> D[Environment Validation]
+    D --> E[Investigation Phase]
+    E --> F[Implementation]
+    F --> G[Quality Check]
+    G --> H[Small Atomic Commits]
+    H --> I[Testing & Validation]
+    I --> J[Documentation Update]
+    J --> K[Final Review]
+    K --> L[Push to origin]
+
+    F --> G
+    G --> F
+    H --> F
+
+    subgraph "Quality Check"
+        G1[make lint]
+        G2[make test]
+        G3[Fix any issues]
+        G1 --> G2 --> G3
+    end
+    G --> G1
+```
+
+**Key Principles:**
+
+- **Quality validation after every change:** Always run lint and test commands
+- **Small commits with clean code:** Each commit should pass all quality checks
+- **Continuous validation:** Test and validate at each stage
+
+### 2.2 Branch Strategy (STRICT)
+
+```bash
+# Pattern: <type>/<short-description>
+# Examples:
+git checkout -b feat/add-firewall-role
+git checkout -b fix/swarm-init-idempotence
+git checkout -b refactor/common-role-tasks
+```
+
+**Allowed Types:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `hotfix`
+
+### 2.3 Commit Standards
+
+#### 2.3.1 Commit Frequency and Size
+
+**MANDATORY:** Make small, atomic commits throughout the development workflow.
+
+- **Commit early and often:** Don't wait until a role is complete
+- **Atomic changes:** Each commit should represent a single, logical change
+- **Incremental progress:** Break large changes into smaller, reviewable chunks
+- **Safe rollback points:** Each commit should leave the infrastructure code in a working state
+
+**Examples of good commit granularity:**
+
+- Add Docker installation task to common role
+- Implement Swarm manager initialization logic
+- Add Molecule test for worker join functionality
+- Update inventory with new host variables
+- Add error handling for network connectivity issues
+
+#### 2.3.2 Code Quality Validation (MANDATORY)
+
+**REQUIRED:** Run quality checks after every code change, before committing.
+
+```bash
+# 1. Validate Ansible syntax and best practices
+make lint
+
+# 2. Run role tests with Molecule
+make test
+```
+
+**Workflow Integration:**
+
+1. Make Ansible code changes
+2. Run `make lint` to validate syntax and best practices
+3. Run `make test` to execute Molecule tests
+4. Fix any issues found
+5. Commit changes
+6. Repeat for next change
+
+#### 2.3.3 Conventional Commit Format
+
+```bash
+# Pattern: <type>(<scope>): <description>
+#
+# Types: feat, fix, docs, style, refactor, test, chore, perf, ci
+# Scope: role name or component (optional)
+# Description: imperative mood, lowercase, no period
+
+# ✅ Good Examples:
+feat(common): add Docker installation and configuration
+fix(swarm): resolve manager node initialization race condition
+refactor(worker): simplify join token retrieval logic
+test(molecule): add comprehensive Docker service validation
+docs(readme): update deployment instructions
+perf(inventory): optimize host variable organization
+
+# ❌ Bad Examples:
+Added new role                 # No type/scope
+fix: fixing bug               # Not descriptive
+feat: Manager service         # Not imperative mood
+```
+
+### 2.4 Investigation Commands
+
+```bash
+# Role exploration
+find roles/ -name "*.yml" | grep -E "(tasks|handlers|defaults)" | head -20
+grep -r "docker" roles/ --include="*.yml"
+grep -r "TODO\|FIXME\|XXX" roles/ --include="*.yml"
+
+# Inventory analysis
+cat inventory/hosts.ini
+ansible-inventory -i inventory/hosts.ini --list
+
+# Environment overview
+tree roles/ -I "molecule" -L 3
+ansible-config dump --only-changed
+```
+
+---
+
+## 3. PROJECT STRUCTURE
+
+The repository follows this structure with comprehensive Molecule testing:
 
 ```
 .
 ├── docs/
-│   └── plans/
+artifacts
 ├── inventory/
 │   ├── group_vars/
-│   │   └── all.yml
-│   └── hosts.ini
+│   │   └── all.yml              # Global variables
+│   └── hosts.ini                # Host definitions
 ├── roles/
-│   ├── common/
+│   ├── common/                  # Base configuration for all nodes
 │   │   ├── defaults/
 │   │   ├── handlers/
 │   │   ├── molecule/
@@ -29,440 +232,335 @@ The repository must follow this structure with comprehensive Molecule testing:
 │   │   │       ├── prepare.yml
 │   │   │       └── tests/
 │   │   │           └── test_common.py
-│   │   ├── tasks/
-│   │   └── tests/
-│   ├── docker_manager/
-│   │   └── molecule/
-│   │       └── default/
-│   │           ├── molecule.yml
-│   │           ├── converge.yml
-│   │           ├── prepare.yml
-│   │           └── tests/
-│   │               └── test_docker_manager.py
-│   └── docker_worker/
-│       └── molecule/
-│           └── default/
-│               ├── molecule.yml
-│               ├── converge.yml
-│               ├── prepare.yml
-│               └── tests/
-│                   └── test_docker_worker.py
-├── ssh_keys/
-├── tests/
-│   ├── requirements.txt
-│   ├── conftest.py
-│   ├── test_local_structure.py
-│   └── test_integration_docker.py
-├── compose.yml
-├── Dockerfile
-├── Dockerfile.test
-└── playbook.yml
+│   │   └── tasks/
+├── ssh_keys/                    # SSH keys for authentication
+├── tests/                       # Integration tests
+├── Makefile                     # Central automation commands
+├── compose.yml                  # Docker Compose configuration
+├── Dockerfile                   # Development container
+└── playbook.yml                # Main orchestration playbook
 ```
 
-- **`docs/plans/`**: Contains the planning artifacts for each development task.
-- **`inventory/`**: Host definitions and variables.
-- **`roles/`**: Task definitions, separated by node responsibility, each with complete Molecule test suites.
-- **`tests/`**: Integration tests using Docker containers to simulate infrastructure and test dependencies.
-- **`Dockerfile`, `compose.yml`**: Defines the containerized development environment with Docker-in-Docker support.
-- **`playbook.yml`**: Main playbook that orchestrates all roles.
+**Key Components:**
+- **`inventory/`**: Host definitions and variables
+- **`roles/`**: Task definitions with complete Molecule test suites
+- **`Makefile`**: Centralized automation commands
+- **`compose.yml`**: Containerized development environment
 
-## 3. Development Environment
+## 4. ANSIBLE STANDARDS (NON-NEGOTIABLE)
 
-A containerized environment using Docker is mandatory for all development and execution to ensure consistency. The environment supports Docker-in-Docker for Molecule testing.
+> **WARNING:** **NEVER** modify container dependencies directly. All package changes must go through the Dockerfile and be built via `make setup`. Modifying the container directly will break the development environment.
 
-### 3.1. Dockerfile
+### 4.1 Role Development Standards
 
-The control node image is defined by a multi-stage Dockerfile that includes all necessary tools for execution and testing.
+All Ansible roles must adhere to these fundamental principles:
 
-```dockerfile
-# Multi-stage build for development and testing
+- **DRY (Don't Repeat Yourself):** Use variables and includes to avoid duplication
+- **KISS (Keep It Simple):** Write the simplest possible tasks that work
+- **Idempotence:** All tasks must be safely runnable multiple times
+- **Error Handling:** Include proper failed_when and error handling
 
-# Base stage with common dependencies
-FROM python:3.9-slim as base
-
-# Install system dependencies including Docker CLI
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssh-client \
-    curl \
-    apt-transport-https \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Docker CLI for Docker-in-Docker support
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends docker-ce-cli \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
-RUN pip install --no-cache-dir \
-    ansible \
-    docker \
-    "molecule[docker]" \
-    testinfra \
-    ansible-lint \
-    yamllint \
-    pytest \
-    pytest-testinfra
-
-# Development stage
-FROM base as development
-WORKDIR /ansible
-COPY . /ansible
-CMD ["ansible", "--version"]
-
-# Testing stage with additional test dependencies
-FROM base as testing
-RUN pip install --no-cache-dir \
-    pytest-xdist \
-    pytest-cov \
-    pytest-html
-WORKDIR /ansible
-COPY . /ansible
-CMD ["molecule", "--version"]
-```
-
-### 3.2. Docker Compose
-
-Use the following `compose.yml` to manage the control node container with Docker-in-Docker support.
+### 4.2 YAML Standards
 
 ```yaml
-services:
-  ansible-control:
-    build: 
-      context: .
-      target: development
-    container_name: ansible_control_node
-    privileged: true  # Required for Docker-in-Docker and systemd
-    volumes:
-      - .:/ansible
-      - ~/.ssh:/root/.ssh:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - docker_data:/var/lib/docker
-    environment:
-      - DOCKER_TLS_CERTDIR=
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    command: tail -f /dev/null
+# ✅ Good Ansible Task Example
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  register: docker_service_result
+  failed_when: docker_service_result.failed
+  tags:
+    - docker
+    - services
 
-  ansible-test:
-    build:
-      context: .
-      target: testing
-    container_name: ansible_test_node
-    privileged: true
-    volumes:
-      - .:/ansible
-      - /var/run/docker.sock:/var/run/docker.sock
-      - docker_test_data:/var/lib/docker
-    environment:
-      - DOCKER_TLS_CERTDIR=
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    profiles:
-      - testing
-    command: tail -f /dev/null
-
-volumes:
-  docker_data:
-  docker_test_data:
+# ❌ Bad Example
+- service: name=docker state=started  # No proper YAML formatting
 ```
 
-### 3.3. Environment Workflow Commands
+### 4.3 Variable Management
 
-**All development operations MUST use the Makefile.**
+- **Role Defaults:** Use `defaults/main.yml` for role-specific variables
+- **Group Variables:** Use `inventory/group_vars/` for environment-specific settings
+- **Host Variables:** Use `inventory/host_vars/` for host-specific configurations
+- **Sensitive Data:** Always use Ansible Vault for secrets
 
-- **Initialize Environment:**
-  ```bash
-  make setup
-  ```
-
-- **Access Container Shell:**
-  ```bash
-  make shell
-  ```
-
-- **Start Development:**
-  ```bash
-  make dev
-  ```
-
-- **Shutdown Environment:**
-  ```bash
-  make stop
-  ```
-
-## 4. Ansible Configuration
-
-### 4.1. Inventory
-
-The inventory must be modular. Host and group definitions are in `inventory/hosts.ini`.
-
-**Authentication Requirement:** SSH key authentication is mandatory. The `ansible_ssh_private_key_file` variable must be used. For all other secrets, use **Ansible Vault**.
-
-**`inventory/hosts.ini` Example:**
-```ini
-[managers]
-manager1 ansible_host=192.168.1.10 ansible_ssh_private_key_file=~/.ssh/manager1_key
-
-[workers]
-worker1 ansible_host=192.168.1.20
-
-[workers:vars]
-ansible_ssh_private_key_file=~/.ssh/worker_nodes_key
-
-[all:vars]
-ansible_user=your_ssh_user
-ansible_python_interpreter=/usr/bin/python3
-```
-
-### 4.2. Roles
-
-Automation logic is encapsulated in roles, each with comprehensive Molecule test suites.
-
-- **`common`**: Base configuration applied to all nodes (e.g., install Docker).
-- **`docker_manager`**: Initializes the Swarm and manages the manager nodes.
-- **`docker_worker`**: Joins the worker nodes to the Swarm.
-
-#### 4.2.1. Role Testing Structure
-
-Each role MUST include a complete Molecule test suite following this standardized structure:
-
-```
-roles/<role_name>/
-├── defaults/           # Default variables
-├── handlers/           # Handlers for service management
-├── tasks/             # Main task definitions
-├── molecule/          # Molecule test suite
-│   └── default/
-│       ├── molecule.yml      # Molecule configuration with Docker driver
-│       ├── converge.yml      # Playbook to test the role
-│       ├── prepare.yml       # System preparation tasks
-│       └── tests/
-│           └── test_<role>.py # Testinfra test cases
-└── tests/             # Additional test files (optional)
-```
-
-#### 4.2.2. Molecule Configuration Standards
-
-All Molecule configurations MUST:
-- Use the Docker driver for containerized testing
-- Use Ubuntu 22.04 as the base test image
-- Enable privileged mode for systemd and Docker operations
-- Include proper cgroupns_mode and volume mounts for systemd
-- Configure Testinfra as the verifier with parallel execution
-- Include comprehensive test sequences (lint, syntax, converge, idempotence, verify)
-
-#### 4.2.3. Testinfra Test Standards
-
-All Testinfra tests MUST:
-- Test package installations and service states
-- Verify configuration file contents and permissions
-- Test network connectivity and port availability
-- Validate Docker and Swarm functionality where applicable
-- Include proper test function documentation
-- Handle both positive and negative test cases
-
-### 4.3. Main Playbook (`playbook.yml`)
-
-The main playbook orchestrates the execution of roles.
-
-```yaml
 ---
-- name: Apply common configuration to all nodes
-  hosts: all
-  become: yes
-  roles:
-    - common
 
-- name: Configure Docker Swarm Managers
-  hosts: managers
-  become: yes
-  roles:
-    - docker_manager
+## 5. SECURITY STANDARDS (NON-NEGOTIABLE)
 
-- name: Configure Docker Swarm Workers
-  hosts: workers
-  become: yes
-  roles:
-    - docker_worker
+### 5.1 Environment Variables
+
+- **ALWAYS** use Ansible variables for managing environment-specific configurations.
+- **STRICTLY PROHIBITED:** Hardcoded values in tasks or templates.
+
+### 5.2 SSH Key Authentication
+
+- **MANDATORY:** SSH key authentication for all hosts
+- **STRICTLY PROHIBITED:** Password authentication in production
+- **Required:** Use `ansible_ssh_private_key_file` variable in inventory
+
+### 5.3 Secret Management Rules
+
+- **STRICTLY PROHIBITED:** Hardcoded secrets in playbooks or roles
+- **STRICTLY PROHIBITED:** Plaintext passwords in inventory files
+- **MANDATORY:** Use Ansible Vault for all sensitive data
+- **REQUIRED:** SSH keys must be properly secured with appropriate permissions
+
+```bash
+# ✅ Correct way to handle secrets
+ansible-vault create inventory/group_vars/all/vault.yml
+ansible-vault edit inventory/group_vars/all/vault.yml
+
+# ✅ Proper SSH key permissions
+chmod 600 ssh_keys/*
 ```
 
-## 5. Execution and Testing
+---
 
-### 5.1. Makefile Commands
+## 6. TESTING STRATEGY
 
-The project includes a simplified Makefile that centralizes essential development operations:
+### 6.1 Test Execution Matrix
 
-- **Environment Management**: `setup`, `start`, `stop`, `status`, `clean`
-- **Development**: `dev`, `shell`, `logs`
-- **Testing**: `test`, `test-unit`, `test-local`, `test-integration`, `test-integration-real`, `lint`
-- **Deployment**: `deploy`, `deploy-check`, `deploy-managers`, `deploy-workers`
-- **Debug & Utilities**: `debug`, `ping`, `version`
+| Test Type | Command | Coverage Requirement | When to Run |
+|:----------|:--------|:--------------------|:------------|
+| Linting | `make lint` | 100% pass | Before every commit |
+| Syntax | `make deploy-check` | 100% pass | Before every commit |
+| Unit (Molecule) | `make test` | All roles | Before PR |
+| Integration | `make deploy` | Full playbook | Before merge |
 
-**Essential Commands:**
-```bash
-make help          # Show all available commands
-make setup         # Setup development environment
-make dev           # Start development (containers + shell)
-make test          # Run complete test suite
-make test-unit     # Run unit tests (Molecule)
-make test-integration # Run integration tests with Docker
-make deploy-check  # Test deployment (dry-run)
+### 6.2 Molecule Test Standards
+
+**REQUIRED:** All roles must include comprehensive Molecule tests.
+
+```yaml
+# ✅ Good Molecule Test Structure
+# molecule/default/molecule.yml
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: ubuntu:22.04
+    pre_build_image: true
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    command: "/lib/systemd/systemd"
+provisioner:
+  name: ansible
+verifier:
+  name: testinfra
 ```
 
-### 5.2. Integration Testing
+### 6.3 Testinfra Validation
 
-Integration tests use Docker containers to simulate real infrastructure. The testing framework:
+```python
+# ✅ Good Testinfra Test Pattern
+def test_docker_service_running(host):
+    """Test that Docker service is running and enabled."""
+    docker_service = host.service("docker")
+    assert docker_service.is_running
+    assert docker_service.is_enabled
 
-- **Docker Container Simulation**: Creates temporary Docker containers that act as manager and worker nodes
-- **Network Isolation**: Uses dedicated Docker networks for test isolation
-- **SSH Authentication**: Generates temporary SSH keys for secure container access
-- **Testinfra Validation**: Uses testinfra to validate system state and configurations
-- **Cleanup Management**: Automatically cleans up containers and resources after testing
+def test_docker_group_exists(host):
+    """Test that docker group exists."""
+    docker_group = host.group("docker")
+    assert docker_group.exists
 
-**Integration Test Execution:**
-```bash
-# Run integration tests with Docker containers
-make test-integration
-
-# Run integration tests against real infrastructure  
-make test-integration-real
+def test_docker_socket_accessible(host):
+    """Test that Docker socket is accessible."""
+    docker_socket = host.socket("unix:///var/run/docker.sock")
+    assert docker_socket.is_listening
 ```
 
-### 5.3. Playbook Execution
+### 6.4 Test Authoring Rules
 
-All playbook execution is handled directly by the Makefile targets. **No intermediate scripts are used** - all operations execute ansible-playbook commands directly within the containerized environment.
+**REQUIRED:** Descriptive test names.
+**MANDATORY:** Avoid shared state between tests. Use `setup_method` or `teardown_method` for Testinfra, or `before_each` for Molecule playbooks to ensure a clean environment for each test.
 
-**Usage Examples:**
-```bash
-# All deployment operations MUST use Makefile
-make deploy              # Run on all hosts
-make deploy-check        # Run in check mode (dry-run) on all hosts
-make deploy-managers     # Run on managers only
-make deploy-workers      # Run on workers only
+```python
+# ❌ BAD
+def test_something(host):
+    # ...
+
+# ✅ GOOD
+def test_docker_service_is_running_and_enabled(host):
+    """Test that Docker service is running and enabled."""
+    # ...
 ```
 
-### 5.3. Testing Strategy
+---
 
-#### 5.3.1. Multi-Level Testing Approach
+## 7. INFRASTRUCTURE VALIDATION & DEBUGGING
 
-The project implements a comprehensive multi-level testing strategy:
+### 7.1 Environment Validation Commands
 
-1. **Static Analysis (Linting)**
-   - `ansible-lint` for playbook and role quality
-   - `yamllint` for YAML syntax validation
-   - Executed automatically in CI/CD and Molecule tests
-
-2. **Unit Testing (Molecule + Testinfra)**
-   - Individual role testing in isolated containers
-   - Docker driver for consistent, reproducible environments
-   - Testinfra for infrastructure validation
-   - Parallel test execution for efficiency
-
-3. **Integration Testing**
-   - Full playbook execution against test containers
-   - End-to-end workflow validation
-   - Multi-node Swarm functionality testing
-
-4. **Idempotence Testing**
-   - Automatic verification that roles can be run multiple times
-   - Ensures configuration stability and reliability
-
-#### 5.3.2. Test Execution
-
-**All testing operations MUST use the Makefile:**
 ```bash
-# Run complete test suite (automatically manages test environment)
-make test
+# Ansible connectivity test
+make ping
 
-# Run linting only
-make lint
+# Inventory validation
+docker compose exec ansible ansible-inventory -i inventory/hosts.ini --list
 
-# Deploy validation
+# Docker Swarm status check
+docker compose exec ansible ansible -i inventory/hosts.ini managers -m shell -a "docker node ls"
+
+# Service status validation
+docker compose exec ansible ansible -i inventory/hosts.ini all -m service -a "name=docker state=started"
+```
+
+### 7.2 Infrastructure Monitoring
+
+```bash
+# Real-time deployment logs
+make logs | grep -E "(ERROR|WARN|FAILED)"
+
+# Host resource monitoring
+docker compose exec ansible ansible -i inventory/hosts.ini all -m setup -a "filter=ansible_memory_mb"
+
+# Network connectivity validation
+docker compose exec ansible ansible -i inventory/hosts.ini all -m ping
+```
+
+### 7.3 Debug Commands
+
+```bash
+# Verbose playbook execution
+docker compose exec ansible ansible-playbook -i inventory/hosts.ini playbook.yml -vvv
+
+# Step-by-step execution
+docker compose exec ansible ansible-playbook -i inventory/hosts.ini playbook.yml --step
+
+# Check mode (dry-run)
 make deploy-check
 ```
 
-**The `make test` command automatically:**
-- Sets up dedicated test environment
-- Runs ansible-lint and yamllint
-- Validates playbook syntax  
-- Tests all roles with Molecule
-- Cleans up test environment
+---
 
-#### 5.3.3. Docker-in-Docker Testing Requirements
+## 8. TASK PLANNING - MANDATORY PROCESS
 
-All testing relies on Docker-in-Docker capabilities:
+For any non-trivial task (e.g., `feat`, `fix`, `refactor`), it is **MANDATORY** to follow this planning and documentation process BEFORE writing or modifying Ansible code.
 
-- **Container Privileges**: Tests run in privileged containers
-- **systemd Support**: Full systemd functionality in test containers
-- **Docker Socket Access**: Direct access to Docker daemon
-- **Network Isolation**: Each test gets isolated network environment
-- **Resource Management**: Proper cleanup of test containers and networks
+### 8.1 Workflow
 
-## 6. Development Protocol and Workflow
+1. **Create the Branch:** Follow the naming standard (`<type>/<description>`)
+2. **Create Plan File:** Create a new numbered Markdown file in `/docs/plans/`
+   - **Naming:** Sequential numbers (1.md, 2.md, etc.)
+   - **Example:** If `1.md` exists, create `2.md`
+3. **Structure the Plan:** The file must contain these sections:
+   - `1. Objective`
+   - `2. Technical Analysis and Strategy`
+   - `3. Scope of Modification`
+   - `4. Execution Plan (Checklist)`
+4. **Execute and Document:** Update the plan file in real-time as you implement
+5. **Progress Tracking:** Mark checklist items as `[x]` when completed
+6. **Atomic Commits:** Commit frequently with the updated plan file
 
-### 6.1. Git Workflow
+### 8.2 Plan Directory Structure
 
-#### Branching Strategy
-All changes must be developed in a dedicated branch created from `main`.
-- **Naming:** `<type>/<short-description>` (e.g., `feat/add-firewall-role`)
+```
+docs/plans/
+├── 1.md              # First task plan
+├── 2.md              # Second task plan
+└── ...
+```
 
-#### Conventional Commits
-All commits MUST adhere to the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification.
-- **Structure:** `<type>(optional scope): <description>`
+### 8.3 Mandatory Plan Template
 
-### 6.2. AI Operational Protocol
+```markdown
+# Task Plan: [Task Name]
 
-#### Core Principle: The Plan Precedes Action
+**Branch:** `[type]/[task-name]`
+**Status:** [TODO | IN_PROGRESS | DONE]
+
+## 1. Objective
+
+[Clear description of what needs to be accomplished]
+
+## 2. Technical Analysis and Strategy
+
+### Current State Analysis
+- [ ] Analyze existing roles and their responsibilities
+- [ ] Review current inventory structure
+- [ ] Identify dependencies and constraints
+
+### Implementation Strategy
+- [ ] Define approach for the task
+- [ ] Identify potential risks and mitigation
+- [ ] Plan testing strategy
+
+## 3. Scope of Modification
+
+### Files to be Modified/Created
+- `roles/[role_name]/tasks/main.yml`
+- `roles/[role_name]/molecule/default/molecule.yml`
+- `roles/[role_name]/molecule/default/tests/test_[role].py`
+
+### Configuration Changes
+- [ ] Inventory updates required
+- [ ] Variable definitions needed
+- [ ] Handler modifications
+
+## 4. Execution Plan (Checklist)
+
+### Phase 1: Setup and Analysis
+- [ ] Create branch from main
+- [ ] Set up development environment (`make setup`)
+- [ ] Validate current environment (`make ping`, `make lint`)
+
+### Phase 2: Implementation
+- [ ] Implement Ansible tasks
+- [ ] Add/update role variables
+- [ ] Create/update handlers as needed
+
+### Phase 3: Testing
+- [ ] Create Molecule test scenarios
+- [ ] Implement Testinfra validation tests
+- [ ] Run all tests (`make test`)
+- [ ] Validate syntax (`make lint`)
+
+### Phase 4: Integration
+- [ ] Test deployment in check mode (`make deploy-check`)
+- [ ] Validate against all target hosts
+- [ ] Update documentation as needed
+
+### Phase 5: Completion
+- [ ] All tests passing
+- [ ] Documentation updated
+- [ ] Plan marked as DONE
+```
+
+---
+
+## 9. AI OPERATIONAL PROTOCOL
+
+### 9.1 Core Principle: The Plan Precedes Action
+
 No Ansible code implementation shall be initiated without a formally defined and registered execution plan in `/docs/plans/`.
 
-#### Documentation Mandate
-At the completion of any task, the AI must review all project documentation. If the changes introduced by the task are not accurately reflected in the documentation, the AI must create, update, or amend the documentation to ensure it is current and comprehensive. This includes, but is not limited to, the `README.md`, `docs/`, and any other relevant files.
+### 9.2 Documentation Mandate
 
-#### General Process Flow
-```mermaid
-graph TD
-    A[Task Start] --> B{Phase 1: Planning};
-    B --> B1[1. Create Plan File];
-    B1 --> B2[2. Structure Plan: Objective, Analysis, Scope, Checklist];
-    B2 --> C{Phase 2: Execution & Tracking};
-    C --> C1["Execution Loop"];
-    C1 --> C2["a. Implement Ansible task/role"];
-    C2 --> C3["b. Mark [x] on checklist"];
-    C3 --> C4["c. Commit (code + plan)"];
-    C4 --> C1;
-    C1 --> D{Phase 3: Completion Verification};
-    D --> D1["Check Criteria:"];
-    D1 --> D2["- Checklist 100%?"];
-    D2 --> D3["- `ansible-lint` & `molecule test` passed?"];
-    D3 --> D4["- Playbook executed successfully?"];
-    D4 --> E[Task End];
+At the completion of any task, the AI must review all project documentation. If the changes introduced by the task are not accurately reflected in the documentation, the AI must create, update, or amend the documentation to ensure it is current and comprehensive.
 
-    style A fill:#d4edda,stroke:#155724
-    style E fill:#d4edda,stroke:#155724
-    style B fill:#cce5ff,stroke:#004085
-    style C fill:#fff3cd,stroke:#856404
-    style D fill:#f8d7da,stroke:#721c24
-```
+### 9.3 Phase-Based Development Process
 
 #### Phase 1: Planning
 **Action**: Before writing code, generate the planning artifact.
 
-1.  **Create Plan File**:
-    - **Command**: Create a new Markdown file in `/docs/plans/`.
-    - **Naming**: The name of each plan file must be only a number that must follow the sequence.
-    - **Example**: `1.md`. If the file `1.md` already exists in `docs/plans`, then a new task must have the name `2.md`.
-
-2.  **Structure the Plan**: The file must contain the sections: `1. Objective`, `2. Technical Analysis and Strategy`, `3. Scope of Modification`, and `4. Execution Plan (Checklist)`.
+1. **Create Plan File**: New numbered Markdown file in `/docs/plans/`
+2. **Structure the Plan**: Must contain all required sections from template
+3. **Analysis First**: Understand existing infrastructure before modification
 
 #### Phase 2: Execution and Tracking
 **Action**: Implement the Ansible code following the plan and recording progress.
 
-1.  **Continuous Update**: The plan file must be modified in real-time.
-2.  **Progress Logging**: Immediately after completing a subtask, mark it as done: change `- [ ]` to `- [x]`.
-3.  **Atomic Version Control**: Make a commit after completing significant subtasks, including the updated plan file.
+1. **Continuous Update**: Plan file must be modified in real-time
+2. **Progress Logging**: Mark checklist items as `[x]` immediately after completion
+3. **Atomic Version Control**: Commit after completing significant subtasks
 
 #### Phase 3: Completion Criteria
 **Action**: Verify the following conditions to validate task completion.
@@ -477,30 +575,74 @@ A task is declared **COMPLETE** if, and only if, all the following conditions re
 6.  **Test Coverage**: Each role must have comprehensive Testinfra tests covering all functionality.
 7.  **Plan as Proof**: The finalized plan file serves as the execution log and the auditable proof that all steps were followed.
 
-#### Mandatory Testing Protocol for AI Agents
+### 9.4 Mandatory Testing Protocol for AI Agents
 
-Before declaring any development task complete, AI agents MUST execute the following testing sequence using the Makefile:
+Before declaring any development task complete, AI agents MUST execute:
 
-**Required Makefile Commands:**
 ```bash
 # Essential validation commands
-make test            # Complete test suite (includes lint + syntax + roles)
-make deploy-check    # Deployment validation
+make lint            # Ansible syntax and best practices
+make test            # Complete Molecule test suite
+make deploy-check    # Deployment validation (dry-run)
 ```
 
-**Testing Environment Requirements:**
-- The `make test` command automatically manages test environment setup and cleanup
-- All tests run within containerized environment for consistency
-- Basic functionality tests MUST pass for task completion
-- Docker-in-Docker Molecule tests are enhanced functionality when environment supports it
-
 **Test Failure Protocol:**
-- Any basic test failure MUST be resolved before task completion
+- Any test failure MUST be resolved before task completion
 - Root cause analysis MUST be documented in the plan
 - Failed tests MUST be re-executed after fixes
-- No task shall be marked complete with failing basic tests
+- No task shall be marked complete with failing tests
 
-**Docker-in-Docker Limitations:**
-- Complex Docker-in-Docker scenarios may have connectivity issues in some environments
-- Basic syntax testing and playbook validation are sufficient for development validation
-- Full Molecule container testing is enhanced functionality when available
+---
+
+## 10. TROUBLESHOOTING GUIDE
+
+### 10.1 Common Issues & Solutions
+
+| Issue | Symptoms | Solution |
+|:------|:---------|:---------|
+| Container not starting | `make status` shows "Exit 1" | Check logs: `make logs` |
+| SSH connection failed | "Permission denied" errors | Verify SSH keys: `ls -la ssh_keys/` |
+| Ansible syntax errors | `make lint` fails | Check YAML syntax and Ansible best practices |
+| Molecule tests failing | `make test` shows failures | Review test logs and fix role implementation |
+| Inventory issues | Hosts unreachable | Validate inventory: `ansible-inventory --list` |
+
+### 10.2 Debug Commands
+
+```bash
+# Service health check
+make status
+make ping
+
+# Detailed logging
+make logs
+make debug
+
+# Environment validation
+make version
+docker compose exec ansible ansible --version
+```
+
+### 10.3 Emergency Recovery
+
+```bash
+# Quick restart
+make stop
+make start
+```
+
+### 10.4 Full Environment Reset (Use with Caution)
+
+This script will completely wipe all Docker volumes and data used by the development environment. Use it as a last resort to reset the environment to a clean state.
+
+```bash
+# Wipe everything (containers, volumes, networks)
+docker compose down -v --remove-orphans
+docker system prune -af --volumes
+
+# Reinitialize project from scratch
+make setup
+```
+
+---
+
+**FINAL REMINDER:** This guide is MANDATORY for all AI agents. Any deviation must be justified in the task documentation and properly recorded in the planning artifacts.

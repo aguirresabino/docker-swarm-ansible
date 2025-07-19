@@ -1,43 +1,12 @@
 ---
 services:
-  ansible-control:
+  ansible:
     build:
       context: .
-      target: development
-    container_name: ansible_control_node
-    privileged: true  # Required for Docker-in-Docker and systemd
-    volumes:
-      - .:/ansible
-      # Mount SSH keys for host access
-      - ~/.ssh:/root/.ssh:ro
-      # Mount the Docker socket for Molecule Docker driver
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Create a volume for Docker-in-Docker data
-      - docker_data:/var/lib/docker
-    environment:
-      # Docker-in-Docker configuration
-      - DOCKER_TLS_CERTDIR=
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    command: tail -f /dev/null  # Keep the container running
-
-  # Separate service for testing with dedicated test image
-  ansible-test:
-    build:
-      context: .
-      target: testing
-    container_name: ansible_test_node
+      dockerfile: Dockerfile
+    container_name: ansible_control
     privileged: true
     volumes:
       - .:/ansible
       - /var/run/docker.sock:/var/run/docker.sock
-      - docker_test_data:/var/lib/docker
-    environment:
-      - DOCKER_TLS_CERTDIR=
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    profiles:
-      - testing
     command: tail -f /dev/null
-
-volumes:
-  docker_data:
-  docker_test_data:
