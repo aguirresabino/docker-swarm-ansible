@@ -50,7 +50,9 @@ The repository must follow this structure with comprehensive Molecule testing:
 ├── ssh_keys/
 ├── tests/
 │   ├── requirements.txt
-│   └── test_integration.py
+│   ├── conftest.py
+│   ├── test_local_structure.py
+│   └── test_integration_docker.py
 ├── compose.yml
 ├── Dockerfile
 ├── Dockerfile.test
@@ -60,7 +62,7 @@ The repository must follow this structure with comprehensive Molecule testing:
 - **`docs/plans/`**: Contains the planning artifacts for each development task.
 - **`inventory/`**: Host definitions and variables.
 - **`roles/`**: Task definitions, separated by node responsibility, each with complete Molecule test suites.
-- **`tests/`**: Infrastructure validation tests and test dependencies.
+- **`tests/`**: Integration tests using Docker containers to simulate infrastructure and test dependencies.
 - **`Dockerfile`, `compose.yml`**: Defines the containerized development environment with Docker-in-Docker support.
 - **`playbook.yml`**: Main playbook that orchestrates all roles.
 
@@ -295,7 +297,7 @@ The project includes a simplified Makefile that centralizes essential developmen
 
 - **Environment Management**: `setup`, `start`, `stop`, `status`, `clean`
 - **Development**: `dev`, `shell`, `logs`
-- **Testing**: `test`, `lint`
+- **Testing**: `test`, `test-unit`, `test-local`, `test-integration`, `test-integration-real`, `lint`
 - **Deployment**: `deploy`, `deploy-check`, `deploy-managers`, `deploy-workers`
 - **Debug & Utilities**: `debug`, `ping`, `version`
 
@@ -305,10 +307,31 @@ make help          # Show all available commands
 make setup         # Setup development environment
 make dev           # Start development (containers + shell)
 make test          # Run complete test suite
+make test-unit     # Run unit tests (Molecule)
+make test-integration # Run integration tests with Docker
 make deploy-check  # Test deployment (dry-run)
 ```
 
-### 5.2. Playbook Execution
+### 5.2. Integration Testing
+
+Integration tests use Docker containers to simulate real infrastructure. The testing framework:
+
+- **Docker Container Simulation**: Creates temporary Docker containers that act as manager and worker nodes
+- **Network Isolation**: Uses dedicated Docker networks for test isolation
+- **SSH Authentication**: Generates temporary SSH keys for secure container access
+- **Testinfra Validation**: Uses testinfra to validate system state and configurations
+- **Cleanup Management**: Automatically cleans up containers and resources after testing
+
+**Integration Test Execution:**
+```bash
+# Run integration tests with Docker containers
+make test-integration
+
+# Run integration tests against real infrastructure  
+make test-integration-real
+```
+
+### 5.3. Playbook Execution
 
 All playbook execution is handled directly by the Makefile targets. **No intermediate scripts are used** - all operations execute ansible-playbook commands directly within the containerized environment.
 

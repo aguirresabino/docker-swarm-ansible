@@ -1,9 +1,6 @@
 # Environments
 .env
 
-# Gemini
-.gemini/
-
 # Ansible temporary files
 *.retry
 
@@ -27,3 +24,10 @@ dist/
 # SSH Keys
 ssh_keys/*
 !ssh_keys/.gitkeep
+
+.DS_Store
+
+# AI
+.gemini/
+GEMINI.md
+docs/plans
