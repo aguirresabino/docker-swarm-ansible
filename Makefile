@@ -64,6 +64,7 @@ test: ## Run complete test suite
 	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/docker && molecule test"
 	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/docker-swarm-init && molecule test"
 	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/docker-swarm-manager && molecule test"
+	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/docker-swarm-worker && molecule test"
 	@echo "$(GREEN)All tests completed!$(NC)"
 
 .PHONY: lint

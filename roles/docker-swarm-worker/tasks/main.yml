@@ -1,0 +1,79 @@
+---
+- name: Verify required variables are set
+  ansible.builtin.assert:
+    that:
+      - swarm_primary_manager_host is defined
+      - swarm_primary_manager_host != ""
+      - swarm_worker_token is defined
+      - swarm_worker_token != ""
+    fail_msg: >
+      Required variables swarm_primary_manager_host and swarm_worker_token
+      must be set
+    success_msg: "Required variables are properly configured"
+  tags: [swarm, worker, validation]
+
+- name: Check if node is already part of a swarm
+  community.docker.docker_swarm_info:
+    api_version: "auto"
+  register: current_swarm_info
+  ignore_errors: true
+  tags: [swarm, worker, check]
+
+- name: Debug current swarm status
+  ansible.builtin.debug:
+    msg: >
+      Node swarm status:
+      {{ current_swarm_info.swarm_facts.LocalNodeState | default('inactive') }}
+  tags: [swarm, worker, debug]
+
+- name: Join Docker Swarm as worker
+  community.docker.docker_swarm:
+    state: present
+    join_token: "{{ swarm_worker_token }}"
+    remote_addrs:
+      - "{{ swarm_manager_addr }}"
+    listen_addr: "{{ swarm_listen_addr }}"
+    advertise_addr: >
+      {{ ansible_host }}:{{ swarm_port_for_communication_between_managers }}
+    api_version: "auto"
+  register: swarm_join_result
+  retries: "{{ swarm_join_retries }}"
+  delay: "{{ swarm_join_delay }}"
+  until: swarm_join_result is succeeded
+  when:
+    - >
+      current_swarm_info.swarm_facts.LocalNodeState | default('inactive')
+      != 'active'
+    - >
+      current_swarm_info.swarm_facts.LocalNodeState | default('inactive')
+      != 'locked'
+  notify: Display worker join result
+  tags: [swarm, worker, join]
+
+- name: Verify worker node joined successfully
+  community.docker.docker_swarm_info:
+    api_version: "auto"
+  register: post_join_swarm_info
+  tags: [swarm, worker, verify]
+
+- name: Assert worker node is active in swarm
+  ansible.builtin.assert:
+    that:
+      - post_join_swarm_info.swarm_facts is defined
+      - post_join_swarm_info.swarm_facts | length > 0
+      - post_join_swarm_info.swarm_facts.ID is defined
+      - post_join_swarm_info.swarm_facts.JoinTokens is defined
+      - post_join_swarm_info.swarm_facts.JoinTokens.Worker is defined
+    fail_msg: "Worker node failed to join swarm properly"
+    success_msg: "Worker node successfully joined swarm"
+  tags: [swarm, worker, verify]
+
+- name: Display worker node information
+  ansible.builtin.debug:
+    msg: |
+      Worker Node Successfully Joined Swarm:
+      - Swarm ID: {{ post_join_swarm_info.swarm_facts.ID }}
+      - Node State: {{ post_join_swarm_info.swarm_facts.LocalNodeState }}
+      - Node ID: {{ post_join_swarm_info.swarm_facts.NodeID | default('N/A') }}
+  when: post_join_swarm_info.swarm_facts is defined
+  tags: [swarm, worker, info, molecule-notest]
