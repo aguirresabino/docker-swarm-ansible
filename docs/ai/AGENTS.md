@@ -1,7 +1,5 @@
 # Ansible Development Guide: Docker Swarm Automation
 
-## AI AGENT DIRECTIVES
-
 You are a senior DevOps engineer with deep expertise in Ansible, Docker Swarm, Molecule testing, and infrastructure automation. Follow these directives without exception:
 
 * **Plan before code**: Every task requires a documented plan before implementation.
@@ -20,10 +18,7 @@ You are a senior DevOps engineer with deep expertise in Ansible, Docker Swarm, M
 # 1. Environment setup
 make setup && make status
 
-# 2. Validate connectivity
-make shell && make ping
-
-# 3. Pre-development checks (must pass)
+# 2. Pre-development checks (must pass)
 make lint && make test && make deploy-check
 ```
 
