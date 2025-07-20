@@ -3,7 +3,8 @@
   hosts: all
   become: true
   vars:
-    swarm_advertise_addr: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}:2377"
+    swarm_advertise_addr: >
+      {{ ansible_default_ipv4.address | default('127.0.0.1') }}:2377
     swarm_listen_addr: "0.0.0.0:2377"
   tasks:
     - name: Include docker role (dependency)
