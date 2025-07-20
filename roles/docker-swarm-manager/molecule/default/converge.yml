@@ -1,0 +1,45 @@
+---
+- name: Initialize primary manager
+  hosts: swarm_primary_manager
+  become: true
+  vars:
+    swarm_advertise_addr: >
+      {{ ansible_default_ipv4.address | default('127.0.0.1') }}:2377
+    swarm_listen_addr: "0.0.0.0:2377"
+  tasks:
+    - name: Include docker role (dependency)
+      ansible.builtin.include_role:
+        name: docker
+
+    - name: Include docker-swarm-init role
+      ansible.builtin.include_role:
+        name: docker-swarm-init
+
+    - name: Get manager join token
+      community.docker.docker_swarm_info:
+        api_version: "auto"
+      register: primary_swarm_info
+
+    - name: Set manager token as host fact
+      ansible.builtin.set_fact:
+        manager_join_token: >
+          {{ primary_swarm_info.swarm_facts.JoinTokens.Manager }}
+        primary_manager_ip: >
+          {{ ansible_default_ipv4.address | default('127.0.0.1') }}
+
+- name: Join additional manager
+  hosts: swarm_manager_instance
+  become: true
+  vars:
+    swarm_primary_manager_host: >
+      {{ hostvars['swarm_primary_manager']['primary_manager_ip'] }}
+    swarm_manager_token: >
+      {{ hostvars['swarm_primary_manager']['manager_join_token'] }}
+  tasks:
+    - name: Include docker role (dependency)
+      ansible.builtin.include_role:
+        name: docker
+
+    - name: Include docker-swarm-manager role
+      ansible.builtin.include_role:
+        name: docker-swarm-manager
