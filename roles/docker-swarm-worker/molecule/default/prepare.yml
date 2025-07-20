@@ -1,0 +1,25 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Python and basic dependencies
+      ansible.builtin.apt:
+        name:
+          - python3
+          - python3-pip
+          - curl
+          - gnupg
+          - ca-certificates
+          - lsb-release
+        state: present
+
+    - name: Install Docker SDK for Python
+      ansible.builtin.pip:
+        name: docker
+        state: present

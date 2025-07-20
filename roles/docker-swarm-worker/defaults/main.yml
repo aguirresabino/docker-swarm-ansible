@@ -1,0 +1,17 @@
+---
+# Docker Swarm Worker Join configuration
+# Primary manager node details (must be set)
+swarm_primary_manager_host: ""
+swarm_worker_token: ""
+
+# Connection details
+swarm_port_for_communication_between_managers: "2377"
+swarm_manager_addr: >
+  {{ swarm_primary_manager_host }}:{{
+  swarm_port_for_communication_between_managers }}
+swarm_listen_addr: "0.0.0.0:2377"
+
+# Join timeout settings
+swarm_join_timeout: 60
+swarm_join_retries: 3
+swarm_join_delay: 10

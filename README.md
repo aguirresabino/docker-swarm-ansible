@@ -38,6 +38,10 @@ It also features a containerized development environment and automated testing w
 │   │   ├── defaults/
 │   │   ├── molecule/             # Automated tests
 │   │   └── tasks/
+│   ├── docker-swarm-worker/      # Docker Swarm worker nodes
+│   │   ├── defaults/
+│   │   ├── molecule/             # Automated tests
+│   │   └── tasks/
 ├── ssh_keys/                     # SSH keys for authentication
 ├── Makefile                      # Automation commands
 ├── compose.yml                   # Docker Compose for development
@@ -49,6 +53,7 @@ It also features a containerized development environment and automated testing w
 - **docker**: Docker installation and configuration for all nodes.
 - **docker-swarm-init**: Docker Swarm initialization for the primary manager node (odin only).
 - **docker-swarm-manager**: Joins additional nodes as managers to the existing swarm cluster.
+- **docker-swarm-worker**: Joins worker nodes to the existing swarm cluster.
 
 ## Getting Started
 
@@ -132,3 +137,29 @@ make deploy
 ```
 
 The playbook automatically detects when there are multiple managers and applies the `docker-swarm-manager` role to join them to the existing cluster.
+
+## Adding Worker Nodes
+
+To add worker nodes to the Docker Swarm cluster:
+
+1. **Add workers to inventory**: Edit `inventory/hosts.ini` and add new hosts to the `[workers]` group:
+
+```ini
+[workers]
+thor ansible_host=192.168.1.66 ansible_ssh_private_key_file=/ansible/ssh_keys/thor ansible_port=2201
+loki ansible_host=192.168.1.67 ansible_ssh_private_key_file=/ansible/ssh_keys/loki ansible_port=2201
+worker3 ansible_host=192.168.1.70 ansible_ssh_private_key_file=/ansible/ssh_keys/worker3 ansible_port=2201
+```
+
+2. **Add SSH keys**: Place the SSH private keys in the `ssh_keys/` directory with appropriate permissions (600).
+
+3. **Deploy**: Run the deployment which will automatically:
+   - Apply common configuration and Docker installation to new workers
+   - Initialize swarm on primary manager (odin) if not already done
+   - Join worker nodes using the `docker-swarm-worker` role
+
+```bash
+make deploy
+```
+
+The playbook automatically applies the `docker-swarm-worker` role to all nodes in the `[workers]` group to join them to the existing cluster as worker nodes.

@@ -1,0 +1,15 @@
+---
+- name: Display worker join result
+  ansible.builtin.debug:
+    msg: |
+      Docker Swarm Worker Join Result:
+      - Action: >
+        {{ swarm_join_result.actions | default(['No actions']) | join(', ') }}
+      - Changed: {{ swarm_join_result.changed }}
+      {% if swarm_join_result.swarm_facts is defined %}
+      - Node ID: >
+        {{ swarm_join_result.swarm_facts.NodeID | default('N/A') }}
+      - Node State: >
+        {{ swarm_join_result.swarm_facts.LocalNodeState | default('N/A') }}
+      {% endif %}
+  when: swarm_join_result is defined
