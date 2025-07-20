@@ -1,4 +1,36 @@
 ---
+# Emergency cleanup: Fix APT repository conflicts before doing anything else
+- name: Remove all Docker repository files to fix APT conflicts
+  ansible.builtin.shell: |
+    rm -f /etc/apt/sources.list.d/*docker*
+    rm -f /etc/apt/sources.list.d/docker.*
+  changed_when: false
+  failed_when: false
+  tags: [docker]
+
+- name: Remove all Docker GPG keys to fix APT conflicts
+  ansible.builtin.shell: |
+    rm -f /usr/share/keyrings/docker*
+    rm -f /etc/apt/keyrings/docker*
+  changed_when: false
+  failed_when: false
+  tags: [docker]
+
+- name: Remove Docker entries from main sources.list to fix APT conflicts
+  ansible.builtin.shell: |
+    sed -i '/download\.docker\.com/d' /etc/apt/sources.list
+  changed_when: false
+  failed_when: false
+  tags: [docker]
+
+- name: Force update APT cache after repository cleanup
+  ansible.builtin.shell: |
+    apt-get clean
+    apt-get update
+  changed_when: false
+  failed_when: false
+  tags: [docker]
+
 # Cleanup any existing conflicting Docker installations for idempotence
 - name: Remove old Docker packages that might conflict
   ansible.builtin.apt:
@@ -8,23 +40,7 @@
       - docker-compose
       - podman-docker
     state: absent
-  tags: [docker]
-
-- name: Remove old Docker GPG keys that might conflict
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - /usr/share/keyrings/docker-archive-keyring.gpg
-    - /etc/apt/keyrings/docker.gpg
-  tags: [docker]
-
-- name: Remove old Docker repository files that might conflict
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - /etc/apt/sources.list.d/docker.sources
+    update_cache: false
   tags: [docker]
 
 # Set up Docker's apt repository following official documentation
