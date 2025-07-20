@@ -16,8 +16,10 @@
   hosts: all
   gather_facts: true
   vars:
-    common_ntp_server: 0.pool.ntp.org
+    docker_registry_username: testuser
+    docker_registry_password: testpass
+    docker_registry_url: docker.io
   tasks:
-    - name: Include common role
+    - name: Include docker role
       include_role:
-        name: common
+        name: docker
