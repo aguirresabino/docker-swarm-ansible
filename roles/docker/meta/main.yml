@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: aguirresabino
+  description: Install and configure Docker CE on Ubuntu systems
+  company: 
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+  galaxy_tags:
+    - docker
+    - container
+    - virtualization
+    - deployment
+
+dependencies: []

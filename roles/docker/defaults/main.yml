@@ -1,0 +1,5 @@
+---
+# Docker registry configuration
+# docker_registry_username: your_username
+# docker_registry_password: your_password
+# docker_registry_url: docker.io
