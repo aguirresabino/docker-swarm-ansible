@@ -1,0 +1,4 @@
+---
+- name: Display swarm initialization result
+  ansible.builtin.debug:
+    msg: "Docker Swarm initialized successfully on {{ inventory_hostname }}"
