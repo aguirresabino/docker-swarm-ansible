@@ -1,59 +1,157 @@
 ---
-- name: Add Docker GPG key
-  ansible.builtin.get_url:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    dest: /tmp/docker.gpg
-    mode: '0644'
+# Cleanup any existing conflicting Docker installations for idempotence
+- name: Remove old Docker packages that might conflict
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-doc
+      - docker-compose
+      - podman-docker
+    state: absent
+  tags: [docker]
 
-- name: Convert and install Docker GPG key
-  ansible.builtin.shell: |
-    gpg --dearmor < /tmp/docker.gpg \
-      > /usr/share/keyrings/docker-archive-keyring.gpg
-  args:
-    creates: /usr/share/keyrings/docker-archive-keyring.gpg
+- name: Remove old Docker GPG keys that might conflict
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /usr/share/keyrings/docker-archive-keyring.gpg
+    - /etc/apt/keyrings/docker.gpg
+  tags: [docker]
 
-- name: Add Docker repository
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb [arch={{ ansible_architecture
-        | replace('x86_64', 'amd64')
-        | replace('aarch64', 'arm64') }}
-      signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]
-      https://download.docker.com/linux/ubuntu
-      {{ ansible_distribution_release }} stable
-    state: present
-    filename: docker
+- name: Remove old Docker repository files that might conflict
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/docker.sources
+  tags: [docker]
 
-- name: Update apt cache
+# Set up Docker's apt repository following official documentation
+
+- name: Update apt package index
   ansible.builtin.apt:
     update_cache: true
-  changed_when: false
+    cache_valid_time: 3600
+  tags: [docker]
 
-- name: Install Docker
+- name: Install prerequisites for Docker repository
   ansible.builtin.apt:
-    name: docker-ce
+    name:
+      - ca-certificates
+      - curl
     state: present
   tags: [docker]
 
-- name: Restart Docker after installation (production only)
-  ansible.builtin.systemd:
-    name: docker
-    state: restarted
-  tags: [docker, molecule-notest]
+- name: Create /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  tags: [docker]
 
-- name: Add current user to docker group
+- name: Download Docker's official GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    force: false
+  tags: [docker]
+
+- name: Ensure Docker GPG key has correct permissions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/docker.asc
+    mode: 'a+r'
+  tags: [docker]
+
+- name: Get system architecture
+  ansible.builtin.command: dpkg --print-architecture
+  register: system_architecture
+  changed_when: false
+  tags: [docker]
+
+- name: Get Ubuntu codename
+  ansible.builtin.shell: |
+    . /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}"
+  register: ubuntu_codename
+  changed_when: false
+  tags: [docker]
+
+- name: Add Docker repository to apt sources
+  ansible.builtin.copy:
+    content: >-
+      deb [arch={{ system_architecture.stdout }}
+      signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/ubuntu
+      {{ ubuntu_codename.stdout }} stable
+    dest: /etc/apt/sources.list.d/docker.list
+    mode: '0644'
+  notify: Update apt cache
+  tags: [docker]
+
+- name: Update apt package index after adding Docker repository
+  ansible.builtin.apt:
+    update_cache: true
+  tags: [docker]
+
+- name: Install Docker packages (latest version)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+  tags: [docker]
+
+# Create the docker group and add user
+- name: Create docker group
+  ansible.builtin.group:
+    name: docker
+    state: present
+  tags: [docker]
+
+- name: Add user to docker group
   ansible.builtin.user:
     name: "{{ ansible_user }}"
     groups: docker
     append: true
+  tags: [docker]
 
-- name: Ensure Docker service is started and enabled
+# Configure Docker to start on boot with systemd
+- name: Enable Docker service to start on boot
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: true
+  tags: [docker, services]
+
+- name: Enable containerd service to start on boot
+  ansible.builtin.systemd:
+    name: containerd.service
+    enabled: true
+  tags: [docker, services]
+
+- name: Start Docker service
   ansible.builtin.systemd:
     name: docker
     state: started
-    enabled: true
   tags: [docker, services, molecule-notest]
 
+# Verify Docker installation
+- name: Verify Docker installation
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+  tags: [docker, verify]
+
+- name: Display Docker version
+  ansible.builtin.debug:
+    msg: "Docker installed successfully: {{ docker_version.stdout }}"
+  tags: [docker, verify]
+
+# Optional: Log in to Docker registry (if credentials provided)
 - name: Log in to Docker registry
   community.docker.docker_login:
     username: "{{ docker_registry_username | default(omit) }}"
