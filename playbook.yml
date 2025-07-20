@@ -22,3 +22,14 @@
       ansible.builtin.include_role:
         name: docker-swarm-manager
       when: groups['managers'] | length > 1
+
+- name: Join workers to Docker Swarm
+  hosts: workers
+  become: false
+  vars:
+    swarm_worker_token: "{{ hostvars['odin']['worker_token'] }}"
+  tasks:
+    - name: Include docker-swarm-worker role for worker nodes
+      ansible.builtin.include_role:
+        name: docker-swarm-worker
+      when: groups['workers'] | length > 0

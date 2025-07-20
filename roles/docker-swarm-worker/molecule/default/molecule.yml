@@ -1,0 +1,45 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: swarm_primary_manager
+    image: ubuntu:22.04
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "sleep infinity"
+    pre_build_image: false
+  - name: swarm_worker_instance
+    image: ubuntu:22.04
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "sleep infinity"
+    pre_build_image: false
+provisioner:
+  name: ansible
+  ansible_args:
+    - --skip-tags
+    - molecule-notest
+  inventory:
+    host_vars:
+      swarm_primary_manager:
+        ansible_user: root
+        ansible_connection: docker
+        ansible_python_interpreter: /usr/bin/python3
+      swarm_worker_instance:
+        ansible_user: root
+        ansible_connection: docker
+        ansible_python_interpreter: /usr/bin/python3
+  env:
+    ANSIBLE_ROLES_PATH: ../../..
+  playbooks:
+    prepare: prepare.yml
+verifier:
+  name: testinfra
