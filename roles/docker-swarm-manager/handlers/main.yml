@@ -1,0 +1,15 @@
+---
+- name: Display manager join result
+  ansible.builtin.debug:
+    msg: |
+      Docker Swarm Manager Join Result:
+      - Action: >
+        {{ swarm_join_result.actions | default(['No actions']) | join(', ') }}
+      - Changed: {{ swarm_join_result.changed }}
+      {% if swarm_join_result.swarm_facts is defined %}
+      - Node ID: >
+        {{ swarm_join_result.swarm_facts.NodeID | default('N/A') }}
+      - Manager Status: >
+        {{ swarm_join_result.swarm_facts.ControlAvailable | default('N/A') }}
+      {% endif %}
+  when: swarm_join_result is defined
