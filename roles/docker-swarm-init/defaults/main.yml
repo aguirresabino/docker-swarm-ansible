@@ -1,0 +1,4 @@
+---
+# Docker Swarm Manager configuration
+swarm_listen_addr: "0.0.0.0:2377"
+swarm_advertise_addr: "{{ ansible_host }}:2377"

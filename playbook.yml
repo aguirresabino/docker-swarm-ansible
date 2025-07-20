@@ -5,3 +5,9 @@
   roles:
     - common
     - docker
+
+- name: Initialize Docker Swarm on manager node
+  hosts: odin
+  become: false
+  roles:
+    - docker-swarm-init

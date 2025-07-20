@@ -1,6 +1,8 @@
 # Docker Swarm with Ansible
 
-This project automates the configuration of a Docker Swarm cluster using Ansible. The project includes roles to configure manager and worker nodes, with a containerized development environment and automated testing.
+This project automates the configuration of a Docker Swarm cluster using Ansible. It implements a three-tier Docker Swarm cluster with a primary **Manager Node (odin)** that initializes the swarm, and **Worker Nodes (thor, loki)** that join the cluster. 
+
+It also features a containerized development environment and automated testing with Molecule.
 
 ## Tools Used
 
@@ -22,12 +24,24 @@ This project automates the configuration of a Docker Swarm cluster using Ansible
 │   │   ├── defaults/
 │   │   ├── molecule/             # Automated tests
 │   │   └── tasks/
+│   ├── docker/                   # Docker installation and configuration
+│   │   ├── defaults/
+│   │   ├── molecule/             # Automated tests
+│   │   └── tasks/
+│   ├── docker-swarm-init/     # Docker Swarm manager initialization
+│   │   ├── defaults/
+│   │   ├── molecule/             # Automated tests
+│   │   └── tasks/
 ├── ssh_keys/                     # SSH keys for authentication
 ├── Makefile                      # Automation commands
 ├── compose.yml                   # Docker Compose for development
 ├── Dockerfile                    # Development container
 └── playbook.yml                 # Main playbook
 ```
+
+- **common**: Basic system configuration (NTP, users, etc.) applied to all nodes.
+- **docker**: Docker installation and configuration for all nodes.
+- **docker-swarm-init**: Docker Swarm initialization for the primary manager node (odin only).
 
 ## Getting Started
 

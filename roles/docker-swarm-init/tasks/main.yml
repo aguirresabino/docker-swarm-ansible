@@ -1,0 +1,43 @@
+---
+- name: Initialize Docker Swarm if not already initialized
+  community.docker.docker_swarm:
+    state: present
+    advertise_addr: "{{ swarm_advertise_addr }}"
+    listen_addr: "{{ swarm_listen_addr }}"
+  register: swarm_init_result
+  notify: Display swarm initialization result
+  tags: [swarm, init]
+
+- name: Get manager and worker join tokens
+  community.docker.docker_swarm_info:
+    api_version: "auto"
+  register: swarm_info
+  tags: [swarm, info]
+
+- name: Set manager token fact
+  ansible.builtin.set_fact:
+    manager_token: "{{ swarm_info.swarm_facts.JoinTokens.Manager }}"
+  when: swarm_info.swarm_facts.JoinTokens.Manager is defined
+  tags: [swarm, token]
+
+- name: Set worker token fact
+  ansible.builtin.set_fact:
+    worker_token: "{{ swarm_info.swarm_facts.JoinTokens.Worker }}"
+  when: swarm_info.swarm_facts.JoinTokens.Worker is defined
+  tags: [swarm, token]
+
+- name: Display manager join command
+  ansible.builtin.debug:
+    msg: >
+      Manager join command: docker swarm join --token
+      {{ manager_token }} {{ swarm_advertise_addr }}
+  when: manager_token is defined
+  tags: [swarm, info, molecule-notest]
+
+- name: Display worker join command
+  ansible.builtin.debug:
+    msg: >
+      Worker join command: docker swarm join --token
+      {{ worker_token }} {{ swarm_advertise_addr }}
+  when: worker_token is defined
+  tags: [swarm, info, molecule-notest]
