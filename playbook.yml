@@ -6,8 +6,19 @@
     - common
     - docker
 
-- name: Initialize Docker Swarm on manager node
+- name: Initialize Docker Swarm on primary manager node
   hosts: odin
   become: false
   roles:
     - docker-swarm-init
+
+- name: Join additional managers to Docker Swarm
+  hosts: managers:!odin
+  become: false
+  vars:
+    swarm_manager_token: "{{ hostvars['odin']['manager_token'] }}"
+  tasks:
+    - name: Include docker-swarm-manager role for additional managers
+      ansible.builtin.include_role:
+        name: docker-swarm-manager
+      when: groups['managers'] | length > 1

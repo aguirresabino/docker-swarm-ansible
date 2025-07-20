@@ -1,0 +1,12 @@
+---
+# Global variables for Docker Swarm cluster
+
+# Primary manager configuration
+# This should be the IP/hostname of the primary manager (odin)
+swarm_primary_manager_host: "192.168.1.65"
+swarm_port_for_communication_between_managers: "2377"
+
+# These variables will be created dynamically by the docker-swarm-init role
+# and used by docker-swarm-manager and docker-swarm-worker roles
+swarm_manager_token: ""
+swarm_worker_token: ""

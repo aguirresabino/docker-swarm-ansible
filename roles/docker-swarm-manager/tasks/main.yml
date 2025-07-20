@@ -1,0 +1,78 @@
+---
+- name: Verify required variables are set
+  ansible.builtin.assert:
+    that:
+      - swarm_primary_manager_host is defined
+      - swarm_primary_manager_host != ""
+      - swarm_manager_token is defined
+      - swarm_manager_token != ""
+    fail_msg: >
+      Required variables swarm_primary_manager_host and swarm_manager_token
+      must be set
+    success_msg: "Required variables are properly configured"
+  tags: [swarm, manager, validation]
+
+- name: Check if node is already part of a swarm
+  community.docker.docker_swarm_info:
+    api_version: "auto"
+  register: current_swarm_info
+  ignore_errors: true
+  tags: [swarm, manager, check]
+
+- name: Debug current swarm status
+  ansible.builtin.debug:
+    msg: >
+      Node swarm status:
+      {{ current_swarm_info.swarm_facts.LocalNodeState | default('inactive') }}
+  tags: [swarm, manager, debug]
+
+- name: Join Docker Swarm as manager
+  community.docker.docker_swarm:
+    state: present
+    join_token: "{{ swarm_manager_token }}"
+    remote_addrs:
+      - "{{ swarm_manager_addr }}"
+    listen_addr: "{{ swarm_listen_addr }}"
+    advertise_addr: >
+      {{ ansible_host }}:{{ swarm_port_for_communication_between_managers }}
+    api_version: "auto"
+  register: swarm_join_result
+  retries: "{{ swarm_join_retries }}"
+  delay: "{{ swarm_join_delay }}"
+  until: swarm_join_result is succeeded
+  when:
+    - >
+      current_swarm_info.swarm_facts.LocalNodeState | default('inactive')
+      != 'active'
+    - >
+      current_swarm_info.swarm_facts.LocalNodeState | default('inactive')
+      != 'locked'
+  notify: Display manager join result
+  tags: [swarm, manager, join]
+
+- name: Verify manager node joined successfully
+  community.docker.docker_swarm_info:
+    api_version: "auto"
+  register: post_join_swarm_info
+  tags: [swarm, manager, verify]
+
+- name: Assert manager node is active in swarm
+  ansible.builtin.assert:
+    that:
+      - post_join_swarm_info.swarm_facts is defined
+      - post_join_swarm_info.swarm_facts | length > 0
+      - post_join_swarm_info.swarm_facts.ID is defined
+      - post_join_swarm_info.swarm_facts.JoinTokens is defined
+    fail_msg: "Manager node failed to join swarm properly"
+    success_msg: "Manager node successfully joined swarm"
+  tags: [swarm, manager, verify]
+
+- name: Display manager node information
+  ansible.builtin.debug:
+    msg: |
+      Manager Node Successfully Joined Swarm:
+      - Swarm ID: {{ post_join_swarm_info.swarm_facts.ID }}
+      - Created: {{ post_join_swarm_info.swarm_facts.CreatedAt }}
+      - Join tokens available: Manager and Worker tokens present
+  when: post_join_swarm_info.swarm_facts is defined
+  tags: [swarm, manager, info, molecule-notest]
