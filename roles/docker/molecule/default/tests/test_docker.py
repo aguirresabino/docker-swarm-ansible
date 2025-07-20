@@ -1,4 +1,4 @@
-"""Tests for the docker role."""
+"""Tests for the docker role following official Docker documentation."""
 
 import os
 import testinfra.utils.ansible_runner
@@ -8,10 +8,25 @@ testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
 ).get_hosts('all')
 
 
+def test_prerequisites_installed(host):
+    """Verify prerequisites (ca-certificates, curl) are installed."""
+    assert host.package("ca-certificates").is_installed
+    assert host.package("curl").is_installed
+
+
+def test_keyrings_directory_exists(host):
+    """Verify /etc/apt/keyrings directory exists with correct permissions."""
+    keyrings_dir = host.file("/etc/apt/keyrings")
+    assert keyrings_dir.exists
+    assert keyrings_dir.is_directory
+    assert keyrings_dir.mode == 0o755
+
+
 def test_docker_gpg_key_installed(host):
-    """Verify Docker GPG key is installed."""
-    gpg_key = host.file("/usr/share/keyrings/docker-archive-keyring.gpg")
+    """Verify Docker GPG key is installed at official location."""
+    gpg_key = host.file("/etc/apt/keyrings/docker.asc")
     assert gpg_key.exists
+    assert gpg_key.mode & 0o044  # Readable by all
 
 
 def test_docker_repository_added(host):
@@ -27,12 +42,40 @@ def test_docker_package_installed(host):
     assert package.is_installed
 
 
-def test_docker_service_running(host):
-    """Verify Docker service is available (service start skipped in container)."""
-    # In container environment with molecule-notest, we verify docker command works
-    cmd = host.run("docker --version")
-    assert cmd.rc == 0
-    assert "Docker version" in cmd.stdout
+def test_docker_cli_package_installed(host):
+    """Verify Docker CE CLI package is installed."""
+    package = host.package("docker-ce-cli")
+    assert package.is_installed
+
+
+def test_containerd_package_installed(host):
+    """Verify containerd.io package is installed."""
+    package = host.package("containerd.io")
+    assert package.is_installed
+
+
+def test_docker_buildx_plugin_installed(host):
+    """Verify Docker Buildx plugin is installed."""
+    package = host.package("docker-buildx-plugin")
+    assert package.is_installed
+
+
+def test_docker_compose_plugin_installed(host):
+    """Verify Docker Compose plugin is installed."""
+    package = host.package("docker-compose-plugin")
+    assert package.is_installed
+
+
+def test_docker_service_enabled(host):
+    """Verify Docker service is enabled for boot."""
+    docker_service = host.service("docker")
+    assert docker_service.is_enabled
+
+
+def test_containerd_service_enabled(host):
+    """Verify containerd service is enabled for boot."""
+    containerd_service = host.service("containerd")
+    assert containerd_service.is_enabled
 
 
 def test_docker_group_exists(host):
@@ -46,8 +89,18 @@ def test_user_in_docker_group(host):
     assert "docker" in user.groups
 
 
-def test_docker_socket_accessible(host):
-    """Verify Docker socket path exists (even if not active in container)."""
+def test_docker_version_command(host):
+    """Verify docker --version command works."""
+    cmd = host.run("docker --version")
+    assert cmd.rc == 0
+    assert "Docker version" in cmd.stdout
+
+
+def test_docker_compose_command(host):
+    """Verify docker compose command works (plugin)."""
+    cmd = host.run("docker compose version")
+    assert cmd.rc == 0
+    assert "Docker Compose version" in cmd.stdout
     # Check if docker command is available, since socket may not be accessible in test container
     cmd = host.run("which docker")
     assert cmd.rc == 0
