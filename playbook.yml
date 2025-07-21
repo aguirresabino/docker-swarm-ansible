@@ -5,10 +5,13 @@
   roles:
     - common
     - docker
+    - python-requirements
 
 - name: Initialize Docker Swarm on primary manager node
   hosts: odin
   become: false
+  vars:
+    ansible_python_interpreter: "{{ ansible_venv_python_interpreter | default('/usr/bin/python3') }}"
   roles:
     - docker-swarm-init
 
@@ -17,6 +20,7 @@
   become: false
   vars:
     swarm_manager_token: "{{ hostvars['odin']['manager_token'] }}"
+    ansible_python_interpreter: "{{ ansible_venv_python_interpreter | default('/usr/bin/python3') }}"
   tasks:
     - name: Include docker-swarm-manager role for additional managers
       ansible.builtin.include_role:
@@ -28,6 +32,7 @@
   become: false
   vars:
     swarm_worker_token: "{{ hostvars['odin']['worker_token'] }}"
+    ansible_python_interpreter: "{{ ansible_venv_python_interpreter | default('/usr/bin/python3') }}"
   tasks:
     - name: Include docker-swarm-worker role for worker nodes
       ansible.builtin.include_role:
