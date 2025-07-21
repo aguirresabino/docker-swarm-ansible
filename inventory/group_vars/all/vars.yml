@@ -10,3 +10,6 @@ swarm_port_for_communication_between_managers: "2377"
 # and used by docker-swarm-manager and docker-swarm-worker roles
 swarm_manager_token: ""
 swarm_worker_token: ""
+
+# This is where the Python virtual environment will be created
+python_requirements_venv_path: "/opt/ansible-venv"
