@@ -30,11 +30,9 @@
   community.docker.docker_swarm:
     state: join
     join_token: "{{ swarm_manager_token }}"
-    remote_addrs:
-      - "{{ swarm_manager_addr }}"
+    remote_addrs: "{{ swarm_manager_addr }}"
     listen_addr: "{{ swarm_listen_addr }}"
-    advertise_addr: >
-      {{ ansible_host }}:{{ swarm_port_for_communication_between_managers }}
+    advertise_addr: "{{ ansible_host }}"
     api_version: "auto"
   register: swarm_join_result
   retries: "{{ swarm_join_retries }}"
