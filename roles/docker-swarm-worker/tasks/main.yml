@@ -28,7 +28,7 @@
 
 - name: Join Docker Swarm as worker
   community.docker.docker_swarm:
-    state: present
+    state: join
     join_token: "{{ swarm_worker_token }}"
     remote_addrs:
       - "{{ swarm_manager_addr }}"
@@ -50,6 +50,11 @@
   notify: Display worker join result
   tags: [swarm, worker, join]
 
+- name: Wait for swarm state to stabilize
+  ansible.builtin.pause:
+    seconds: 3
+  tags: [swarm, worker, join]
+
 - name: Verify worker node joined successfully
   community.docker.docker_swarm_info:
     api_version: "auto"
@@ -61,9 +66,11 @@
     that:
       - post_join_swarm_info.swarm_facts is defined
       - post_join_swarm_info.swarm_facts | length > 0
-      - post_join_swarm_info.swarm_facts.ID is defined
-      - post_join_swarm_info.swarm_facts.JoinTokens is defined
-      - post_join_swarm_info.swarm_facts.JoinTokens.Worker is defined
+      - >
+        post_join_swarm_info.swarm_facts.LocalNodeState is defined and
+        post_join_swarm_info.swarm_facts.LocalNodeState == 'active'
+      - post_join_swarm_info.swarm_facts.NodeID is defined
+      - post_join_swarm_info.swarm_facts.NodeID != ''
     fail_msg: "Worker node failed to join swarm properly"
     success_msg: "Worker node successfully joined swarm"
   tags: [swarm, worker, verify]
