@@ -28,7 +28,7 @@
 
 - name: Join Docker Swarm as manager
   community.docker.docker_swarm:
-    state: present
+    state: join
     join_token: "{{ swarm_manager_token }}"
     remote_addrs:
       - "{{ swarm_manager_addr }}"
