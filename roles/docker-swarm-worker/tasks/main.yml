@@ -13,25 +13,26 @@
   tags: [swarm, worker, validation]
 
 - name: Check if node is already part of a swarm
-  community.docker.docker_swarm_info:
+  community.docker.docker_host_info:
     api_version: "auto"
-  register: current_swarm_info
+  register: docker_host_info
   ignore_errors: true
   tags: [swarm, worker, check]
 
 - name: Debug current swarm status
   ansible.builtin.debug:
-    msg: >
-      Node swarm status:
-      {{ current_swarm_info.swarm_facts.LocalNodeState | default('inactive') }}
+    msg: |
+      Docker Host Information:
+      - Swarm Status: {{ docker_host_info.host_info.Swarm.LocalNodeState | default('inactive') }}
+      - Is Manager: {{ docker_host_info.host_info.Swarm.ControlAvailable | default(false) }}
+      - Node ID: {{ docker_host_info.host_info.Swarm.NodeID | default('N/A') }}
   tags: [swarm, worker, debug]
 
 - name: Join Docker Swarm as worker
   community.docker.docker_swarm:
     state: join
     join_token: "{{ swarm_worker_token }}"
-    remote_addrs:
-      - "{{ swarm_manager_addr }}"
+    remote_addrs: "{{ swarm_manager_addr }}"
     listen_addr: "{{ swarm_listen_addr }}"
     advertise_addr: "{{ ansible_host }}"
     api_version: "auto"
@@ -41,11 +42,13 @@
   until: swarm_join_result is succeeded
   when:
     - >
-      current_swarm_info.swarm_facts.LocalNodeState | default('inactive')
-      != 'active'
+      docker_host_info.host_info.Swarm.LocalNodeState | default('inactive')
+      != 'active' or 
+      docker_host_info.host_info.Swarm.ControlAvailable | default(false) == true
     - >
-      current_swarm_info.swarm_facts.LocalNodeState | default('inactive')
+      docker_host_info.host_info.Swarm.LocalNodeState | default('inactive')
       != 'locked'
+  ignore_errors: "{{ ansible_check_mode | default(false) }}"
   notify: Display worker join result
   tags: [swarm, worker, join]
 
@@ -55,34 +58,33 @@
   tags: [swarm, worker, join]
 
 - name: Verify worker node joined successfully
-  community.docker.docker_swarm_info:
+  community.docker.docker_host_info:
     api_version: "auto"
-  register: post_join_swarm_info
+  register: post_join_host_info
   tags: [swarm, worker, verify]
 
 - name: Assert worker node is active in swarm
   ansible.builtin.assert:
     that:
-      - post_join_swarm_info.swarm_facts is defined
-      - post_join_swarm_info.swarm_facts | length > 0
-      - >
-        post_join_swarm_info.swarm_facts.LocalNodeState is defined and
-        post_join_swarm_info.swarm_facts.LocalNodeState == 'active'
-      - post_join_swarm_info.swarm_facts.NodeID is defined
-      - post_join_swarm_info.swarm_facts.NodeID != ''
-    fail_msg: "Worker node failed to join swarm properly"
-    success_msg: "Worker node successfully joined swarm"
+      - post_join_host_info.host_info.Swarm is defined
+      - post_join_host_info.host_info.Swarm.LocalNodeState is defined
+      - post_join_host_info.host_info.Swarm.LocalNodeState == 'active'
+      - post_join_host_info.host_info.Swarm.NodeID is defined
+      - post_join_host_info.host_info.Swarm.NodeID != ''
+      - post_join_host_info.host_info.Swarm.ControlAvailable == false
+    fail_msg: "Worker node failed to join swarm properly or was promoted to manager"
+    success_msg: "Worker node successfully joined swarm as worker"
   tags: [swarm, worker, verify]
 
 - name: Display worker node information
   ansible.builtin.debug:
     msg: |
       Worker Node Successfully Joined Swarm:
-      - Cluster ID: {{ post_join_swarm_info.swarm_facts.Cluster.ID | default('N/A') }}
-      - Node ID: {{ post_join_swarm_info.swarm_facts.NodeID | default('N/A') }}
-      - Node State: {{ post_join_swarm_info.swarm_facts.LocalNodeState | default('unknown') }}
-      - Node Address: {{ post_join_swarm_info.swarm_facts.NodeAddr | default('N/A') }}
-      - Managers: {{ post_join_swarm_info.swarm_facts.Managers | default('N/A') }}
-      - Nodes: {{ post_join_swarm_info.swarm_facts.Nodes | default('N/A') }}
-  when: post_join_swarm_info.swarm_facts is defined
+      - Node ID: {{ post_join_host_info.host_info.Swarm.NodeID | default('N/A') }}
+      - Node State: {{ post_join_host_info.host_info.Swarm.LocalNodeState | default('unknown') }}
+      - Node Address: {{ post_join_host_info.host_info.Swarm.NodeAddr | default('N/A') }}
+      - Is Manager: {{ post_join_host_info.host_info.Swarm.ControlAvailable | default('unknown') }}
+      - Manager Addresses: {{ post_join_host_info.host_info.Swarm.RemoteManagers | default('N/A') }}
+      - Cluster ID: {{ post_join_host_info.host_info.Swarm.Cluster.ID | default('N/A') }}
+  when: post_join_host_info.host_info.Swarm is defined
   tags: [swarm, worker, info, molecule-notest]
