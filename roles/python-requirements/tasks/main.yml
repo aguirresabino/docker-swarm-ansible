@@ -25,32 +25,40 @@
   ansible.builtin.command:
     cmd: "python3 -m venv {{ python_requirements_venv_path }}"
     creates: "{{ python_requirements_venv_path }}/bin/python"
+  become: true
   become_user: "{{ python_requirements_venv_user }}"
   tags: [python-requirements]
 
 - name: Upgrade pip in virtual environment
   ansible.builtin.pip:
     name: pip
-    state: latest
+    state: present
+    extra_args: "--upgrade"
     virtualenv: "{{ python_requirements_venv_path }}"
     virtualenv_command: "python3 -m venv"
+  become: true
   become_user: "{{ python_requirements_venv_user }}"
   tags: [python-requirements]
 
 - name: Install required Python packages in virtual environment
   ansible.builtin.pip:
     name: "{{ python_requirements_pip_packages }}"
-    state: "{{ 'latest' if python_requirements_upgrade_pip_packages else 'present' }}"
+    state: >-
+      {{ 'latest' if python_requirements_upgrade_pip_packages else 'present' }}
     virtualenv: "{{ python_requirements_venv_path }}"
     virtualenv_command: "python3 -m venv"
+  become: true
   become_user: "{{ python_requirements_venv_user }}"
   tags: [python-requirements]
 
 - name: Verify docker module is importable in virtual environment
   ansible.builtin.command:
-    cmd: "{{ python_requirements_venv_path }}/bin/python -c \"import docker; print('Docker SDK version:', docker.__version__)\""
+    cmd: >-
+      {{ python_requirements_venv_path }}/bin/python -c
+      "import docker; print('Docker SDK version:', docker.__version__)"
   register: docker_import_test
   changed_when: false
+  become: true
   become_user: "{{ python_requirements_venv_user }}"
   tags: [python-requirements, verify]
 
@@ -62,9 +70,12 @@
 
 - name: Verify jsondiff module is importable in virtual environment
   ansible.builtin.command:
-    cmd: "{{ python_requirements_venv_path }}/bin/python -c \"import jsondiff; print('jsondiff module imported successfully')\""
+    cmd: >-
+      {{ python_requirements_venv_path }}/bin/python -c
+      "import jsondiff; print('jsondiff module imported successfully')"
   register: jsondiff_import_test
   changed_when: false
+  become: true
   become_user: "{{ python_requirements_venv_user }}"
   tags: [python-requirements, verify]
 
@@ -76,5 +87,6 @@
 
 - name: Set fact for virtual environment Python path
   ansible.builtin.set_fact:
-    ansible_venv_python_interpreter: "{{ python_requirements_venv_path }}/bin/python"
+    ansible_venv_python_interpreter: >-
+      {{ python_requirements_venv_path }}/bin/python
   tags: [python-requirements]

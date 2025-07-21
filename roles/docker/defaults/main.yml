@@ -3,3 +3,6 @@
 # docker_registry_username: your_username
 # docker_registry_password: your_password
 # docker_registry_url: docker.io
+
+# Emergency cleanup control - set to true only if you need to fix APT conflicts
+docker_force_cleanup: false
