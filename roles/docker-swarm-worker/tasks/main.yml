@@ -72,8 +72,11 @@
   ansible.builtin.debug:
     msg: |
       Worker Node Successfully Joined Swarm:
-      - Swarm ID: {{ post_join_swarm_info.swarm_facts.ID }}
-      - Node State: {{ post_join_swarm_info.swarm_facts.LocalNodeState }}
+      - Cluster ID: {{ post_join_swarm_info.swarm_facts.Cluster.ID | default('N/A') }}
       - Node ID: {{ post_join_swarm_info.swarm_facts.NodeID | default('N/A') }}
+      - Node State: {{ post_join_swarm_info.swarm_facts.LocalNodeState | default('unknown') }}
+      - Node Address: {{ post_join_swarm_info.swarm_facts.NodeAddr | default('N/A') }}
+      - Managers: {{ post_join_swarm_info.swarm_facts.Managers | default('N/A') }}
+      - Nodes: {{ post_join_swarm_info.swarm_facts.Nodes | default('N/A') }}
   when: post_join_swarm_info.swarm_facts is defined
   tags: [swarm, worker, info, molecule-notest]
