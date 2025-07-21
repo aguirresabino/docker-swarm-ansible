@@ -1,0 +1,25 @@
+---
+# Python packages to install via APT
+python_requirements_apt_packages:
+  - python3
+  - python3-pip
+  - python3-setuptools
+  - python3-dev
+  - python3-venv
+  - python3-full
+
+# Python packages to install via pip in virtual environment
+python_requirements_pip_packages:
+  - docker>=7.0.0
+  - jsondiff>=2.0.0
+
+# Whether to upgrade Python3 if already installed
+python_requirements_upgrade_python: true
+
+# Whether to upgrade pip packages if already installed
+python_requirements_upgrade_pip_packages: false
+
+# Virtual environment configuration
+python_requirements_venv_path: "/opt/ansible-venv"
+python_requirements_venv_user: "{{ ansible_user }}"
+python_requirements_venv_group: "{{ ansible_user }}"

@@ -1,0 +1,21 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.raw: apt-get update
+      changed_when: false
+
+    - name: Install basic dependencies
+      ansible.builtin.raw: >
+        apt-get install -y systemd curl gnupg lsb-release
+      changed_when: false
+
+- name: Converge
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Include python-requirements role
+      include_role:
+        name: python-requirements
