@@ -23,8 +23,12 @@
   ansible.builtin.debug:
     msg: |
       Docker Host Information:
-      - Swarm Status: {{ docker_host_info.host_info.Swarm.LocalNodeState | default('inactive') }}
-      - Is Manager: {{ docker_host_info.host_info.Swarm.ControlAvailable | default(false) }}
+      - Swarm Status: >-
+          {{ docker_host_info.host_info.Swarm.LocalNodeState |
+            default('inactive') }}
+      - Is Manager: >-
+          {{ docker_host_info.host_info.Swarm.ControlAvailable |
+            default(false) }}
       - Node ID: {{ docker_host_info.host_info.Swarm.NodeID | default('N/A') }}
   tags: [swarm, worker, debug]
 
@@ -71,7 +75,8 @@
       - post_join_host_info.host_info.Swarm.NodeID is defined
       - post_join_host_info.host_info.Swarm.NodeID != ''
       - post_join_host_info.host_info.Swarm.ControlAvailable == false
-    fail_msg: "Worker node failed to join swarm properly or was promoted to manager"
+    fail_msg: >-
+      Worker node failed to join swarm properly or was promoted to manager
     success_msg: "Worker node successfully joined swarm as worker"
   tags: [swarm, worker, verify]
 
@@ -79,11 +84,20 @@
   ansible.builtin.debug:
     msg: |
       Worker Node Successfully Joined Swarm:
-      - Node ID: {{ post_join_host_info.host_info.Swarm.NodeID | default('N/A') }}
-      - Node State: {{ post_join_host_info.host_info.Swarm.LocalNodeState | default('unknown') }}
-      - Node Address: {{ post_join_host_info.host_info.Swarm.NodeAddr | default('N/A') }}
-      - Is Manager: {{ post_join_host_info.host_info.Swarm.ControlAvailable | default('unknown') }}
-      - Manager Addresses: {{ post_join_host_info.host_info.Swarm.RemoteManagers | default('N/A') }}
-      - Cluster ID: {{ post_join_host_info.host_info.Swarm.Cluster.ID | default('N/A') }}
+      - Node ID: >-
+          {{ post_join_host_info.host_info.Swarm.NodeID | default('N/A') }}
+      - Node State: >-
+          {{ post_join_host_info.host_info.Swarm.LocalNodeState |
+            default('unknown') }}
+      - Node Address: >-
+          {{ post_join_host_info.host_info.Swarm.NodeAddr | default('N/A') }}
+      - Is Manager: >-
+          {{ post_join_host_info.host_info.Swarm.ControlAvailable |
+            default('unknown') }}
+      - Manager Addresses: >-
+          {{ post_join_host_info.host_info.Swarm.RemoteManagers |
+            default('N/A') }}
+      - Cluster ID: >-
+          {{ post_join_host_info.host_info.Swarm.Cluster.ID | default('N/A') }}
   when: post_join_host_info.host_info.Swarm is defined
   tags: [swarm, worker, info, molecule-notest]

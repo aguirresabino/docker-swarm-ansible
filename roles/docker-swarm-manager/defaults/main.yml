@@ -6,7 +6,9 @@ swarm_manager_token: ""
 
 # Connection details
 swarm_port_for_communication_between_managers: "2377"
-swarm_manager_addr: "{{ swarm_primary_manager_host }}:{{ swarm_port_for_communication_between_managers }}"
+swarm_manager_addr: >-
+  {{ swarm_primary_manager_host }}:{{
+    swarm_port_for_communication_between_managers }}
 swarm_listen_addr: "0.0.0.0:2377"
 
 # Join timeout settings

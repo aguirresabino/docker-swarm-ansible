@@ -12,12 +12,12 @@
           - Hostname: {{ ansible_hostname }}
           - IP Address: {{ ansible_default_ipv4.address | default('N/A') }}
           - Python: {{ ansible_python_version }}
-          
     - name: Set required variables for the role
       ansible.builtin.set_fact:
         swarm_primary_manager_host: "172.17.0.2"
         swarm_worker_token: "SWMTKN-1-test-token"
-        ansible_host: "{{ ansible_default_ipv4.address | default('172.17.0.3') }}"
+        ansible_host: >-
+          {{ ansible_default_ipv4.address | default('172.17.0.3') }}
 
     - name: Validate role requirements
       ansible.builtin.assert:
