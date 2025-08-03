@@ -36,5 +36,6 @@
   gather_facts: false
   tasks:
     - name: Install community.docker collection
-      ansible.builtin.command: ansible-galaxy collection install community.docker
+      ansible.builtin.command: >-
+        ansible-galaxy collection install community.docker
       changed_when: false
