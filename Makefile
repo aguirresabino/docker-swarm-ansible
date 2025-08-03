@@ -60,7 +60,7 @@ logs: ## Show container logs
 test: ## Run complete test suite
 	@echo "$(GREEN)Running complete test suite...$(NC)"
 	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) ansible-playbook -i inventory/hosts.ini playbook.yml --syntax-check
-	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/common && molecule test"
+	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/ntp && molecule test"
 	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/python-requirements && molecule test"
 	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/docker && molecule test"
 	@$(DOCKER_COMPOSE) exec $(ANSIBLE_CONTAINER) bash -c "cd roles/docker-swarm-init && molecule test"

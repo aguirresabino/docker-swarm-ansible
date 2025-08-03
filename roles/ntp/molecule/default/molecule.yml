@@ -4,7 +4,7 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: common_instance
+  - name: ntp_instance
     image: ubuntu:22.04
     privileged: true
     cgroupns_mode: host
@@ -19,7 +19,7 @@ provisioner:
     - molecule-notest
   inventory:
     host_vars:
-      common_instance:
+      ntp_instance:
         ansible_user: root
         ansible_connection: docker
         ansible_python_interpreter: /usr/bin/python3

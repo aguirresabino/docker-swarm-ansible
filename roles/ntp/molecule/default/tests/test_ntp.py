@@ -1,4 +1,4 @@
-"""Tests for the common role."""
+"""Tests for the ntp role."""
 
 import os
 import testinfra.utils.ansible_runner

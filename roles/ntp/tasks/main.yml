@@ -3,7 +3,7 @@
   ansible.builtin.lineinfile:
     path: /etc/systemd/timesyncd.conf
     regexp: '^#?NTP='
-    line: 'NTP={{ common_ntp_server }}'
+    line: 'NTP={{ ntp_server }}'
   tags: [timesyncd]
 
 - name: Restart systemd-timesyncd after configuration (production only)
