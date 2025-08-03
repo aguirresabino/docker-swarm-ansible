@@ -2,12 +2,8 @@
 - name: Prepare test environment
   hosts: all
   become: true
-  gather_facts: false
+  gather_facts: true
   tasks:
-    - name: Install Python if not present
-      ansible.builtin.raw: test -e /usr/bin/python3 || (apt-get update && apt-get install -y python3)
-      changed_when: false
-
     - name: Install required Python packages
       ansible.builtin.apt:
         name:
@@ -16,12 +12,7 @@
         state: present
         update_cache: true
 
-    - name: Ensure symlinks are available
-      ansible.builtin.file:
-        src: /usr/bin/python3
-        dest: /usr/bin/python
-        state: link
-      failed_when: false
-
-    - name: Gather facts after Python is available
-      ansible.builtin.setup:
+    - name: Install pip Docker SDK
+      ansible.builtin.pip:
+        name: docker
+        state: present
