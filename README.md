@@ -22,7 +22,7 @@ It also features a containerized development environment and automated testing w
 │   │       └── vars.yml          # Shared cluster configuration
 │   └── hosts.ini                 # Host definitions
 ├── roles/
-│   ├── common/                   # Base configuration for all nodes
+│   ├── ntp/                   # Base configuration for all nodes
 │   │   ├── defaults/
 │   │   ├── molecule/             # Automated tests
 │   │   └── tasks/
@@ -49,7 +49,7 @@ It also features a containerized development environment and automated testing w
 └── playbook.yml                 # Main playbook
 ```
 
-- **common**: Basic system configuration (NTP, users, etc.) applied to all nodes.
+- **ntp**: Basic system configuration (NTP, users, etc.) applied to all nodes.
 - **docker**: Docker installation and configuration for all nodes.
 - **docker-swarm-init**: Docker Swarm initialization for the primary manager node (odin only).
 - **docker-swarm-manager**: Joins additional nodes as managers to the existing swarm cluster.
