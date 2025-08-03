@@ -9,13 +9,6 @@
         name:
           - python3
           - python3-pip
-          - curl
-          - gnupg
-          - ca-certificates
+          - systemd
         state: present
         update_cache: true
-
-    - name: Install Docker SDK for Python
-      ansible.builtin.pip:
-        name: docker
-        state: present
