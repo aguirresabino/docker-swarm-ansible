@@ -5,41 +5,48 @@ driver:
   name: docker
 platforms:
   - name: swarm_primary_manager
-    image: ubuntu:22.04
+    image: docker.io/pycontribs/ubuntu:22.04
     privileged: true
-    cgroupns_mode: host
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: "sleep infinity"
-    pre_build_image: false
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    command: "/sbin/init"
+    pre_build_image: true
+    groups:
+      - managers
   - name: swarm_worker_instance
-    image: ubuntu:22.04
+    image: docker.io/pycontribs/ubuntu:22.04
     privileged: true
-    cgroupns_mode: host
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: "sleep infinity"
-    pre_build_image: false
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    command: "/sbin/init"
+    pre_build_image: true
+    groups:
+      - workers
+  - name: swarm_worker_instance_2
+    image: docker.io/pycontribs/ubuntu:22.04
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    command: "/sbin/init"
+    pre_build_image: true
+    groups:
+      - workers
 provisioner:
   name: ansible
-  ansible_args:
-    - --skip-tags
-    - molecule-notest
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks, timer, yaml
   inventory:
-    host_vars:
-      swarm_primary_manager:
-        ansible_user: root
-        ansible_connection: docker
-        ansible_python_interpreter: /usr/bin/python3
-      swarm_worker_instance:
-        ansible_user: root
-        ansible_connection: docker
-        ansible_python_interpreter: /usr/bin/python3
-  env:
-    ANSIBLE_ROLES_PATH: ../../..
-  playbooks:
-    prepare: prepare.yml
+    group_vars:
+      all:
+        swarm_manager_addr: "{{ hostvars['swarm_primary_manager']['ansible_default_ipv4']['address'] | default('172.17.0.2') }}"
+        swarm_listen_addr: "0.0.0.0:2377"
+        swarm_advertise_addr: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+        swarm_worker_token: "{{ hostvars['swarm_primary_manager']['docker_swarm_info']['JoinTokens']['Worker'] | default('') }}"
+        swarm_manager_token: "{{ hostvars['swarm_primary_manager']['docker_swarm_info']['JoinTokens']['Manager'] | default('') }}"
+      managers:
+        node_role: manager
+      workers:
+        node_role: worker
 verifier:
   name: testinfra

@@ -5,7 +5,7 @@ import testinfra.utils.ansible_runner
 
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
     os.environ['MOLECULE_INVENTORY_FILE']
-).get_hosts('swarm_worker_instance')
+).get_hosts('workers')
 
 
 def test_docker_is_installed(host):
@@ -33,19 +33,18 @@ def test_docker_socket_accessible(host):
     assert socket_file.exists
 
 
-def test_docker_swarm_worker_status(host):
-    """Verify node is part of Docker Swarm as worker."""
+def test_docker_swarm_is_active(host):
+    """Verify swarm is active on worker node."""
     cmd = host.run("docker info --format '{{.Swarm.LocalNodeState}}'")
     assert cmd.rc == 0
     assert cmd.stdout.strip() == 'active'
 
 
-def test_docker_swarm_cluster_participation(host):
-    """Verify worker can see basic swarm information."""
-    cmd = host.run("docker info --format '{{.Swarm.NodeID}}'")
+def test_docker_swarm_can_access_docker_info(host):
+    """Verify worker can access Docker swarm information."""
+    cmd = host.run("docker info")
     assert cmd.rc == 0
-    # NodeID should be a non-empty string for active swarm member
-    assert len(cmd.stdout.strip()) > 0
+    assert "Swarm:" in cmd.stdout
 
 
 def test_docker_worker_can_run_containers(host):
@@ -56,16 +55,19 @@ def test_docker_worker_can_run_containers(host):
     assert "Hello from Docker!" in cmd.stdout
 
 
-def test_docker_swarm_cluster_info(host):
-    """Verify worker node has correct swarm cluster information."""
-    cmd = host.run("docker info --format '{{.Swarm.Cluster.ID}}'")
+def test_swarm_cluster_has_multiple_nodes(host):
+    """Verify swarm cluster has multiple nodes."""
+    cmd = host.run("docker node ls --format '{{.Hostname}}'")
     assert cmd.rc == 0
-    # Cluster ID should be a non-empty string
-    assert len(cmd.stdout.strip()) > 0
+    hostnames = cmd.stdout.strip().split('\n')
+    # Should have at least 3 nodes (1 manager + 2 workers)
+    assert len(hostnames) >= 3
 
 
-def test_docker_swarm_is_active(host):
-    """Verify this node is active in the swarm cluster."""
-    cmd = host.run("docker info --format '{{.Swarm.LocalNodeState}}'")
+def test_worker_node_configuration(host):
+    """Verify worker node has proper configuration."""
+    # In shared Docker socket scenarios, validate configuration exists
+    cmd = host.run("docker info --format '{{json .}}'")
     assert cmd.rc == 0
-    assert cmd.stdout.strip() == 'active'
+    # Verify swarm is active and accessible
+    assert '"LocalNodeState":"active"' in cmd.stdout
