@@ -1,39 +1,41 @@
+---
 name: CI
 
-on:
+"on":
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Build development environment
-      run: |
-        docker compose build --no-cache
-        docker compose up -d
-        
-    - name: Wait for container to be ready
-      run: |
-        timeout 60s bash -c 'until docker compose exec ansible bash -c "which ansible"; do sleep 2; done'
-        
-    - name: Run linting
-      run: make lint
-      
-    - name: Run tests
-      run: make test
-      
-    - name: Cleanup
-      if: always()
-      run: |
-        docker compose down --volumes --remove-orphans
-        docker system prune -f
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build development environment
+        run: |
+          docker compose build --no-cache
+          docker compose up -d
+
+      - name: Wait for container to be ready
+        run: |
+          timeout 60s bash -c 'until docker compose exec ansible \
+            bash -c "which ansible"; do sleep 2; done'
+
+      - name: Run linting
+        run: make lint
+
+      - name: Run tests
+        run: make test
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down --volumes --remove-orphans
+          docker system prune -f
