@@ -34,7 +34,7 @@
     join_token: "{{ swarm_worker_token }}"
     remote_addrs: "{{ swarm_manager_addr }}"
     listen_addr: "{{ swarm_listen_addr }}"
-    advertise_addr: "{{ ansible_host }}"
+    advertise_addr: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
     api_version: "auto"
   register: swarm_join_result
   retries: "{{ swarm_join_retries }}"
@@ -43,8 +43,7 @@
   when:
     - >
       docker_host_info.host_info.Swarm.LocalNodeState | default('inactive')
-      != 'active' or 
-      docker_host_info.host_info.Swarm.ControlAvailable | default(false) == true
+      != 'active'
     - >
       docker_host_info.host_info.Swarm.LocalNodeState | default('inactive')
       != 'locked'

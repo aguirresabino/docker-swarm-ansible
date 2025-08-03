@@ -1,45 +1,92 @@
 ---
-- name: Initialize primary manager
-  hosts: swarm_primary_manager
+# Step 1: Install Docker on all nodes
+- name: Install Docker on all nodes
+  hosts: all
   become: true
-  vars:
-    swarm_advertise_addr: >
-      {{ ansible_default_ipv4.address | default('127.0.0.1') }}:2377
-    swarm_listen_addr: "0.0.0.0:2377"
+  gather_facts: true
   tasks:
-    - name: Include docker role (dependency)
+    - name: Include docker role (install Docker)
       ansible.builtin.include_role:
         name: docker
 
+# Step 2: Initialize Swarm on primary manager
+- name: Initialize Docker Swarm on primary manager
+  hosts: swarm_primary_manager
+  become: true
+  gather_facts: true
+  tasks:
     - name: Include docker-swarm-init role
       ansible.builtin.include_role:
         name: docker-swarm-init
 
-    - name: Get worker join token
+    - name: Get swarm information and tokens
       community.docker.docker_swarm_info:
         api_version: "auto"
-      register: primary_swarm_info
+      register: swarm_info
 
-    - name: Set worker token as host fact
+    - name: Set swarm tokens as facts
       ansible.builtin.set_fact:
-        worker_join_token: >
-          {{ primary_swarm_info.swarm_facts.JoinTokens.Worker }}
-        primary_manager_ip: >
-          {{ ansible_default_ipv4.address | default('127.0.0.1') }}
+        swarm_worker_token: "{{ swarm_info.swarm_facts.JoinTokens.Worker }}"
+        swarm_manager_token: "{{ swarm_info.swarm_facts.JoinTokens.Manager }}"
+        primary_manager_ip: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
 
-- name: Join worker
-  hosts: swarm_worker_instance
+    - name: Debug manager information
+      ansible.builtin.debug:
+        msg: |
+          Primary Manager Information:
+          - IP: {{ primary_manager_ip }}
+          - Worker Token: {{ swarm_worker_token[:20] }}...
+          - Manager Token: {{ swarm_manager_token[:20] }}...
+
+# Step 3: Join worker nodes to the swarm
+- name: Join worker nodes to Docker Swarm
+  hosts: workers
   become: true
+  gather_facts: true
   vars:
-    swarm_primary_manager_host: >
-      {{ hostvars['swarm_primary_manager']['primary_manager_ip'] }}
-    swarm_worker_token: >
-      {{ hostvars['swarm_primary_manager']['worker_join_token'] }}
+    swarm_primary_manager_host: "{{ hostvars['swarm_primary_manager']['primary_manager_ip'] }}"
+    swarm_worker_token: "{{ hostvars['swarm_primary_manager']['swarm_worker_token'] }}"
   tasks:
-    - name: Include docker role (dependency)
-      ansible.builtin.include_role:
-        name: docker
+    - name: Debug worker variables
+      ansible.builtin.debug:
+        msg: |
+          Worker Node Variables:
+          - Manager Host: {{ swarm_primary_manager_host }}
+          - Worker Token: {{ swarm_worker_token[:20] }}...
+          - Node IP: {{ ansible_default_ipv4.address | default('127.0.0.1') }}
 
     - name: Include docker-swarm-worker role
       ansible.builtin.include_role:
         name: docker-swarm-worker
+
+# Step 4: Verify the swarm setup
+- name: Verify Docker Swarm cluster setup
+  hosts: managers
+  become: true
+  tasks:
+    - name: Get final swarm node list
+      community.docker.docker_node_info:
+        api_version: "auto"
+      register: swarm_nodes
+
+    - name: Display swarm cluster status
+      ansible.builtin.debug:
+        msg: |
+          Docker Swarm Cluster Status:
+          - Total Nodes: {{ swarm_nodes.nodes | length }}
+          - Managers: {{ swarm_nodes.nodes | selectattr('Spec.Role', 'equalto', 'manager') | list | length }}
+          - Workers: {{ swarm_nodes.nodes | selectattr('Spec.Role', 'equalto', 'worker') | list | length }}
+          
+          Node Details:
+          {% for node in swarm_nodes.nodes %}
+          - {{ node.Description.Hostname }}: {{ node.Spec.Role }} ({{ node.Status.State }})
+          {% endfor %}
+
+    - name: Assert cluster has correct number of nodes
+      ansible.builtin.assert:
+        that:
+          - swarm_nodes.nodes | length == 3
+          - (swarm_nodes.nodes | selectattr('Spec.Role', 'equalto', 'manager') | list | length) == 1
+          - (swarm_nodes.nodes | selectattr('Spec.Role', 'equalto', 'worker') | list | length) == 2
+        fail_msg: "Swarm cluster does not have expected node configuration"
+        success_msg: "Swarm cluster correctly configured with 1 manager and 2 workers"
