@@ -31,3 +31,6 @@ ssh_keys/*
 .gemini/
 GEMINI.md
 docs/plans
+.claude
+CLAUDE.md
+.mcp.json
