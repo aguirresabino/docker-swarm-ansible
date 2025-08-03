@@ -34,7 +34,7 @@
     join_token: "{{ swarm_worker_token }}"
     remote_addrs: "{{ swarm_manager_addr }}"
     listen_addr: "{{ swarm_listen_addr }}"
-    advertise_addr: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+    advertise_addr: "{{ ansible_host }}"
     api_version: "auto"
   register: swarm_join_result
   retries: "{{ swarm_join_retries }}"
