@@ -4,8 +4,8 @@
   become: true
   gather_facts: true
   vars:
-    common_ntp_server: 0.pool.ntp.org
+    ntp_server: 0.pool.ntp.org
   tasks:
-    - name: Include common role
+    - name: Include ntp role
       ansible.builtin.include_role:
-        name: common
+        name: ntp
