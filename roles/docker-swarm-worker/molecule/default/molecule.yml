@@ -43,6 +43,8 @@ provisioner:
     defaults:
       callbacks_enabled: profile_tasks, timer, yaml
       interpreter_python: auto_silent
+  env:
+    ANSIBLE_ROLES_PATH: "../../../"
   inventory:
     host_vars:
       swarm_primary_manager:
