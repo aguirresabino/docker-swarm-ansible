@@ -28,6 +28,7 @@ ssh_keys/*
 .DS_Store
 
 # AI
+docs/plans
 .gemini/
 GEMINI.md
 .claude
