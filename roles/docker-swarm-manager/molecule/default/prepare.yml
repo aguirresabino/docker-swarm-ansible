@@ -1,14 +1,10 @@
 ---
-- name: Prepare
+- name: Prepare test environment
   hosts: all
   become: true
   gather_facts: false
   tasks:
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-
-    - name: Install Python and basic dependencies
+    - name: Install test dependencies
       ansible.builtin.apt:
         name:
           - python3
@@ -16,8 +12,8 @@
           - curl
           - gnupg
           - ca-certificates
-          - lsb-release
         state: present
+        update_cache: true
 
     - name: Install Docker SDK for Python
       ansible.builtin.pip:

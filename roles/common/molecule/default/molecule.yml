@@ -25,5 +25,7 @@ provisioner:
         ansible_python_interpreter: /usr/bin/python3
   env:
     ANSIBLE_ROLES_PATH: ../../..
+  playbooks:
+    prepare: prepare.yml
 verifier:
   name: testinfra
