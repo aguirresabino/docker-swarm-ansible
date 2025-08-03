@@ -112,6 +112,25 @@ make deploy-managers
 make deploy-workers
 ```
 
+### Other Commands
+
+```bash
+# Development with shell access
+make dev
+
+# View container logs
+make logs
+
+# Test connectivity
+make ping
+
+# Debug mode
+make debug
+
+# Show versions
+make version
+```
+
 ## Adding Manager Nodes
 
 To add additional manager nodes for high availability:
