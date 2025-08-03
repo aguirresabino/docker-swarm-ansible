@@ -131,6 +131,24 @@ make debug
 make version
 ```
 
+## CI/CD Pipeline
+
+This project includes automated testing via GitHub Actions. The CI pipeline runs on every pull request and:
+
+- **Linting**: Validates YAML syntax and Ansible best practices
+- **Testing**: Runs all Molecule tests for each role
+- **Quality Gates**: Ensures code quality before merge
+
+### Pipeline Status
+
+The CI workflow automatically:
+1. Sets up the containerized environment
+2. Runs `make lint` to check code quality
+3. Runs `make test` to execute all tests
+4. Reports results as PR status checks
+
+All tests must pass before code can be merged to the main branch.
+
 ## Adding Manager Nodes
 
 To add additional manager nodes for high availability:
