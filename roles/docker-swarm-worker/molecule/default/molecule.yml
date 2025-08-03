@@ -43,19 +43,21 @@ provisioner:
     defaults:
       callbacks_enabled: profile_tasks, timer, yaml
       interpreter_python: auto_silent
-  connection_options:
-    ansible_connection: docker
-    ansible_user: root
   inventory:
+    host_vars:
+      swarm_primary_manager:
+        ansible_user: root
+        ansible_connection: docker
+      swarm_worker_instance:
+        ansible_user: root
+        ansible_connection: docker
+      swarm_worker_instance_2:
+        ansible_user: root
+        ansible_connection: docker
     group_vars:
       all:
-        ansible_connection: docker
-        ansible_user: root
         swarm_manager_addr: "{{ hostvars['swarm_primary_manager']['ansible_default_ipv4']['address'] | default('172.17.0.2') }}"
         swarm_listen_addr: "0.0.0.0:2377"
-        ansible_host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
-        swarm_worker_token: "{{ hostvars['swarm_primary_manager']['docker_swarm_info']['JoinTokens']['Worker'] | default('') }}"
-        swarm_manager_token: "{{ hostvars['swarm_primary_manager']['docker_swarm_info']['JoinTokens']['Manager'] | default('') }}"
       managers:
         node_role: manager
       workers:
