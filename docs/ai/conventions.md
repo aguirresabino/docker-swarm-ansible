@@ -209,7 +209,7 @@ For any substantial task (`feat`, `fix`, `refactor`):
 ### 5.3 Variable Management
 
 ```yaml
-# roles/common/defaults/main.yml (Lowest precedence, easily overridden)
+# roles/ntp/defaults/main.yml (Lowest precedence, easily overridden)
 docker_version: "latest"
 docker_users: []
 
