@@ -350,13 +350,14 @@ A task is **COMPLETE** only when ALL conditions are met:
 # Health checks
 make status && make ping
 
-# Detailed debugging (increase verbosity)
-make shell
-ansible-playbook playbook.yml -vvv
+# Detailed debugging
+make debug
+
+# View logs
+make logs
 
 # Environment reset (last resort)
-docker compose down -v --remove-orphans
-docker system prune -af --volumes
+make clean
 make setup
 ```
 
