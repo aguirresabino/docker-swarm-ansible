@@ -1,6 +1,6 @@
 # Docker Swarm with Ansible
 
-This project automates the configuration of a Docker Swarm cluster using Ansible. It implements a multi-tier Docker Swarm cluster with a **Primary Manager Node (odin)** that initializes the swarm, **Additional Manager Nodes** that join as managers for high availability, and **Worker Nodes (thor, loki)** that join the cluster as workers.
+This project automates the configuration of a Docker Swarm cluster using Ansible. It implements a multi-tier Docker Swarm cluster with a **Primary Manager Node** that initializes the swarm, **Additional Manager Nodes** that join as managers for high availability, and **Worker Nodes** that join the cluster as workers.
 
 It also features a containerized development environment and automated testing with Molecule.
 
@@ -51,7 +51,7 @@ It also features a containerized development environment and automated testing w
 
 - **ntp**: Basic system configuration (NTP, users, etc.) applied to all nodes.
 - **docker**: Docker installation and configuration for all nodes.
-- **docker-swarm-init**: Docker Swarm initialization for the primary manager node (odin only).
+- **docker-swarm-init**: Docker Swarm initialization for the primary manager node.
 - **docker-swarm-manager**: Joins additional nodes as managers to the existing swarm cluster.
 - **docker-swarm-worker**: Joins worker nodes to the existing swarm cluster.
 
@@ -156,17 +156,23 @@ To add additional manager nodes for high availability:
 1. **Add managers to inventory**: Edit `inventory/hosts.ini` and add new hosts to the `[managers]` group:
 
 ```ini
-[managers]
+[primary_manager]
 odin ansible_host=192.168.1.65 ansible_ssh_private_key_file=/ansible/ssh_keys/odin ansible_port=2201
+
+[additional_managers]
 manager2 ansible_host=192.168.1.68 ansible_ssh_private_key_file=/ansible/ssh_keys/manager2 ansible_port=2201
 manager3 ansible_host=192.168.1.69 ansible_ssh_private_key_file=/ansible/ssh_keys/manager3 ansible_port=2201
+
+[managers:children]
+primary_manager
+additional_managers
 ```
 
 2. **Add SSH keys**: Place the SSH private keys in the `ssh_keys/` directory with appropriate permissions (600).
 
 3. **Deploy**: Run the deployment which will automatically:
    - Apply common configuration and Docker installation to new managers
-   - Initialize swarm on primary manager (odin)
+   - Initialize swarm on primary manager
    - Join additional managers using the `docker-swarm-manager` role
 
 ```bash
@@ -192,7 +198,7 @@ worker3 ansible_host=192.168.1.70 ansible_ssh_private_key_file=/ansible/ssh_keys
 
 3. **Deploy**: Run the deployment which will automatically:
    - Apply common configuration and Docker installation to new workers
-   - Initialize swarm on primary manager (odin) if not already done
+   - Initialize swarm on primary manager if not already done
    - Join worker nodes using the `docker-swarm-worker` role
 
 ```bash
