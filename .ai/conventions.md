@@ -121,7 +121,7 @@ make lint && make test
 
 For any substantial task (`feat`, `fix`, `refactor`):
 
-1.  **Create plan file**: `/docs/plans/N.md` (sequential numbering).
+1.  **Create plan file**: `/.ai/plans/N.md` (sequential numbering).
 2.  **Follow template structure** (see below).
 3.  **Update plan in real-time** during implementation.
 4.  **Mark checklist items** as `[x]` when completed.
