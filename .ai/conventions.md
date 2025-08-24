@@ -197,7 +197,7 @@ For any substantial task (`feat`, `fix`, `refactor`):
 * **Idempotence**: Tasks must be safe to run multiple times without changing the result after the first successful run. Use `changed_when` and `failed_when` to control state reporting.
 * **DRY (Don't Repeat Yourself)**: Eliminate duplication. Use `include_tasks`, `import_role`, and variables to create reusable logic.
 * **Error Handling**: Use `block`, `rescue`, and `always` to handle potential failures gracefully.
-* **Variable-Driven**: Avoid hardcoding values in tasks. Externalize configuration into `group_vars`, `host_vars`, and role `defaults`.
+* **Variable-Driven**: Avoid hardcoding values in tasks. Externalize configuration into `group_vars`, `host_vars`, and role `defaults`. Use inventory groups like `primary_manager` to avoid hardcoding specific hostnames.
 
 ### 5.2 Anti-patterns to Avoid
 
