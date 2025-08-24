@@ -8,7 +8,7 @@
     - python-requirements
 
 - name: Initialize Docker Swarm on primary manager node
-  hosts: odin
+  hosts: primary_manager
   become: false
   vars:
     ansible_python_interpreter: >-
@@ -17,11 +17,11 @@
     - docker-swarm-init
 
 - name: Join additional managers to Docker Swarm
-  hosts: managers:!odin
+  hosts: managers:!primary_manager
   become: false
   vars:
-    swarm_manager_token: "{{ hostvars['odin']['manager_token'] }}"
-    swarm_primary_manager_host: "{{ hostvars['odin']['ansible_host'] }}"
+    swarm_manager_token: "{{ hostvars[groups['primary_manager'][0]]['manager_token'] }}"
+    swarm_primary_manager_host: "{{ hostvars[groups['primary_manager'][0]]['ansible_host'] }}"
     ansible_python_interpreter: >-
       {{ python_requirements_venv_path }}/bin/python
   tasks:
@@ -34,8 +34,8 @@
   hosts: workers
   become: false
   vars:
-    swarm_worker_token: "{{ hostvars['odin']['worker_token'] }}"
-    swarm_primary_manager_host: "{{ hostvars['odin']['ansible_host'] }}"
+    swarm_worker_token: "{{ hostvars[groups['primary_manager'][0]]['worker_token'] }}"
+    swarm_primary_manager_host: "{{ hostvars[groups['primary_manager'][0]]['ansible_host'] }}"
     ansible_python_interpreter: >-
       {{ python_requirements_venv_path }}/bin/python
   tasks:
