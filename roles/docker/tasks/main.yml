@@ -23,13 +23,16 @@
     path: /etc/apt/sources.list
     regexp: '.*download\.docker\.com.*'
     state: absent
+  when: docker_force_cleanup | bool
   tags: [docker]
 
 - name: Force update APT cache after repository cleanup
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 300
+  when: docker_force_cleanup | bool
   tags: [docker]
+###
 
 # Cleanup any existing conflicting Docker installations for idempotence
 - name: Remove old Docker packages that might conflict
@@ -44,7 +47,6 @@
   tags: [docker]
 
 # Set up Docker's apt repository following official documentation
-
 - name: Update apt package index
   ansible.builtin.apt:
     update_cache: true
